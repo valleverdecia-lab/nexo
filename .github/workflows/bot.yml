@@ -1,0 +1,47 @@
+name: Bot de Telegram
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"
+
+permissions:
+  contents: write
+  pages: write
+  actions: write
+
+concurrency:
+  group: bot-telegram
+  cancel-in-progress: false
+
+jobs:
+  bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: bot/package-lock.json
+      - name: Preparar
+        run: |
+          cd bot && npm ci --no-audit --no-fund --silent
+          git config user.name "nexo-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Atender mensajes
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          BOT_DURACION_MS: "1500000"
+        run: |
+          if [ -z "$TELEGRAM_TOKEN" ]; then echo "Falta el secreto TELEGRAM_TOKEN"; exit 0; fi
+          node bot/bot.mjs
+      - name: Seguir encendido
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -n "${{ secrets.TELEGRAM_TOKEN }}" ] || exit 0
+          gh workflow run bot.yml --repo "$GITHUB_REPOSITORY" --ref main || true

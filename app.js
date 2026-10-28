@@ -32,7 +32,7 @@ function pintarCarro(){
   $("#carro-pie").style.display=ids.length?"":"none";
   ul.innerHTML=ids.map(id=>{const p=porId[id],cant=carro[id];
     return `<li class="carro-item">
-      <img src="fotos/${p.s}.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/${p.f||p.s+".webp"}" alt="" loading="lazy" decoding="async">
       <div class="carro-info">
         <p class="carro-nombre">${esc(p.n)}</p>
         <p class="m carro-precio">${fmt(p.pv)} × ${cant} = ${fmt(p.pv*cant)}</p>
@@ -79,7 +79,7 @@ function tarjeta(p,i){
   const oro=(i%4===0||i%4===3);
   return `<article class="pieza${oro?" pieza-oro":""}" data-id="${p.s}" style="transition-delay:${Math.min(i,12)*.03}s" tabindex="0" role="button" aria-label="${esc(p.n)}">
     <div class="pieza-marco">
-      <img src="fotos/${p.s}.webp" alt="${esc(p.n)}" loading="lazy" decoding="async" width="1000" height="1000">
+      <img src="fotos/${p.f||p.s+".webp"}" alt="${esc(p.n)}" loading="lazy" decoding="async" width="1000" height="1000">
       <button class="pieza-add" data-add="${p.s}" aria-label="Añadir al carrito: ${esc(p.n)}" title="Añadir al carrito">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       </button>
@@ -144,7 +144,7 @@ let abierto="";
 function abrir(id){
   const p=porId[id]; if(!p)return;
   abierto=id;
-  $("#m-img").src=`fotos/${p.s}.webp`; $("#m-img").alt=p.n;
+  $("#m-img").src=`fotos/${p.f||p.s+".webp"}`; $("#m-img").alt=p.n;
   $("#m-cat").textContent=`${GRUPO_NOMBRE[p.g]} · ${p.c}`;
   $("#m-nombre").textContent=p.n;
   const est=$("#m-estado"); est.className="estado estado--"+(p.e==="agotado"?"agotado":"hay");

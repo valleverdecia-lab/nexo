@@ -70,8 +70,9 @@ header nav .logo{position:absolute;left:50%;transform:translateX(-50%)}
 /* hero */
 #inicio{min-height:100svh;display:flex;align-items:flex-end;position:relative;overflow:hidden;padding:0 clamp(20px,4vw,40px) 90px}
 #inicio::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 50% at 70% 40%,rgba(123,124,240,.22),transparent 70%),radial-gradient(50% 40% at 20% 80%,rgba(217,119,87,.18),transparent 70%)}
-.orb{position:absolute;left:50%;top:42%;width:60vmin;height:60vmin;margin:-30vmin;border-radius:50%;filter:blur(40px);opacity:.8;background:conic-gradient(var(--c),var(--v),#e8b07a,var(--c));animation:sp 18s linear infinite}
+.orb{position:absolute;left:50%;top:38%;width:46vmin;height:46vmin;margin:-23vmin;border-radius:50%;filter:blur(60px);opacity:.38;background:conic-gradient(var(--c),var(--v),#e8b07a,var(--c));animation:sp 18s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+#esfera{position:absolute;left:0;width:100%;z-index:1;pointer-events:none}
 .hero-cont{position:relative;z-index:2;pointer-events:none;max-width:1000px}
 .kicker{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--mut);margin-bottom:22px}
 h1{font-size:clamp(52px,10vw,150px);line-height:.9}
