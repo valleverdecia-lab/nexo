@@ -1,5 +1,11 @@
 {
- "offset": 845583957,
+ "offset": 845583958,
  "owner": 1780253597,
- "pend": {}
+ "pend": {
+  "1780253597": {
+   "tipo": "editar",
+   "campo": "dl",
+   "s": "triciclo-laitunning"
+  }
+ }
 }
