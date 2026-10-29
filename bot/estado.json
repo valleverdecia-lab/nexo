@@ -1,19 +1,5 @@
 {
- "offset": 845583955,
+ "offset": 845583957,
  "owner": 1780253597,
- "pend": {
-  "1780253597": {
-   "tipo": "nuevo",
-   "paso": "foto",
-   "datos": {
-    "n": "Triciclo LaiTunning",
-    "pv": 480000,
-    "g": "vehiculos",
-    "c": "Triciclos",
-    "dl": "🛺 Triciclo Laituning: comodidad y funcionalidad\n\nDiseño moderno en azul turquesa, techo protector, asiento trasero con respaldo, faro delantero circular y espejos retrovisores.\n\nIdeal para el transporte de pasajeros y los desplazamientos cotidianos. Su diseño combina espacio, comodidad y practicidad en un solo vehículo, convirtiéndolo en una opción atractiva para el uso personal o comercial.\n\nUna alternativa práctica para moverte con comodidad y estilo.\n\n\n(Y en la sección de:q problema soluciona):\nGente,siendo honestos esto es una inversión ,con este triciclo nosotros estamos vendiendo la posibilidad de que usted tenga un negocio, un transporte, un trabajo, una fuente de ingreso pasivo  TODO EN UNO",
-    "dc": "🛺 Triciclo Laituning: comodidad y funcionalidad\n\nDiseño moderno en azul turquesa, techo…",
-    "v": "Gente,siendo honestos esto es una inversión ,con este triciclo nosotros estamos vendiendo la posibilidad de que usted tenga un negocio, un transporte, un trabajo, una fuente de ingreso pasivo  TODO EN UNO"
-   }
-  }
- }
+ "pend": {}
 }
