@@ -74,6 +74,52 @@ const enviar = (chat, text, extra = {}) => tg("sendMessage", { chat_id: chat, te
 const teclado = filas => ({ reply_markup: { inline_keyboard: filas } });
 const esc = t => String(t ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 
+// Ajusta la foto al recuadro de la web (1 : 1.06) sin estirar ni cortar el producto:
+// - fondo liso: quita el borde vacío y completa con el mismo color
+// - foto normal: recorte mínimo (≤10%) o fondo desenfocado de la misma foto
+async function prepararFoto(buf, destino) {
+  const sharp = (await import("sharp")).default;
+  const A = 1 / 1.06;
+  const base = await sharp(buf).rotate().resize(1400, 1400, { fit: "inside", withoutEnlargement: true }).toBuffer();
+  const { data, info } = await sharp(base).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { width: w, height: h } = info;
+  const px = (x, y) => { const i = (y * w + x) * 3; return [data[i], data[i + 1], data[i + 2]]; };
+  const esquinas = [px(1, 1), px(w - 2, 1), px(1, h - 2), px(w - 2, h - 2)];
+  const c = [0, 1, 2].map(k => esquinas.map(e => e[k]).sort((a, b) => a - b)[1]);
+  const cerca = p => p.every((v, k) => Math.abs(v - c[k]) < 26);
+  let total = 0, iguales = 0;
+  for (let x = 0; x < w; x += 4) { total += 2; iguales += cerca(px(x, 0)) + cerca(px(x, h - 1)); }
+  for (let y = 0; y < h; y += 4) { total += 2; iguales += cerca(px(0, y)) + cerca(px(w - 1, y)); }
+  const fondo = { r: c[0], g: c[1], b: c[2] };
+  let out;
+  if (iguales / total >= 0.93) {
+    let x0 = w, y0 = h, x1 = 0, y1 = 0;
+    for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) {
+      const p = px(x, y);
+      if (p.some((v, k) => Math.abs(v - c[k]) > 28)) { if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; }
+    }
+    if (x1 <= x0) { x0 = 0; y0 = 0; x1 = w - 1; y1 = h - 1; }
+    const m = Math.round(0.045 * Math.max(x1 - x0, y1 - y0));
+    x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(w - 1, x1 + m); y1 = Math.min(h - 1, y1 + m);
+    const cw = x1 - x0 + 1, ch = y1 - y0 + 1;
+    const [W, H] = cw / ch > A ? [cw, Math.round(cw / A)] : [Math.round(ch * A), ch];
+    out = sharp(base).extract({ left: x0, top: y0, width: cw, height: ch })
+      .extend({ left: Math.floor((W - cw) / 2), right: Math.ceil((W - cw) / 2), top: Math.floor((H - ch) / 2), bottom: Math.ceil((H - ch) / 2), background: fondo });
+    out = sharp(await out.toBuffer());
+  } else {
+    const r = w / h, perdida = r > A ? 1 - A / r : 1 - r / A;
+    if (perdida <= 0.10) {
+      const [W, H] = r > A ? [Math.round(h * A), h] : [w, Math.round(w / A)];
+      out = sharp(base).extract({ left: Math.floor((w - W) / 2), top: Math.floor((h - H) / 2), width: W, height: H });
+    } else {
+      const W = Math.max(w, Math.round(h * A)), H = Math.max(h, Math.round(w / A));
+      const fondoBlur = await sharp(base).resize(W, H, { fit: "cover" }).blur(Math.max(W, H) / 20).modulate({ brightness: 0.62 }).toBuffer();
+      out = sharp(fondoBlur).composite([{ input: base, left: Math.floor((W - w) / 2), top: Math.floor((H - h) / 2) }]);
+    }
+  }
+  await sharp(await out.toBuffer()).resize(1000, 1060, { fit: "inside", withoutEnlargement: true }).webp({ quality: 84 }).toFile(destino);
+}
+
 async function bajarFoto(fileId, slug) {
   const f = await tg("getFile", { file_id: fileId });
   if (!f.ok) throw new Error("No pude descargar la foto");
@@ -81,9 +127,9 @@ async function bajarFoto(fileId, slug) {
   const buf = Buffer.from(await r.arrayBuffer());
   const nombre = `${slug}-${Date.now().toString(36)}.webp`;
   try {
-    const sharp = (await import("sharp")).default;
-    await sharp(buf).rotate().resize(1000, 1000, { fit: "inside", withoutEnlargement: true }).webp({ quality: 82 }).toFile(path.join(DIR_FOTOS, nombre));
+    await prepararFoto(buf, path.join(DIR_FOTOS, nombre));
   } catch (e) {
+    console.log("foto:", e.message);
     const jpg = nombre.replace(/\.webp$/, ".jpg");
     fs.writeFileSync(path.join(DIR_FOTOS, jpg), buf);
     return jpg;
