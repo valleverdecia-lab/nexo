@@ -1,5 +1,11 @@
 {
- "offset": 845583949,
+ "offset": 845583950,
  "owner": 1780253597,
- "pend": {}
+ "pend": {
+  "1780253597": {
+   "tipo": "nuevo",
+   "paso": "nombre",
+   "datos": {}
+  }
+ }
 }
