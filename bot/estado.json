@@ -1,13 +1,15 @@
 {
- "offset": 845583952,
+ "offset": 845583953,
  "owner": 1780253597,
  "pend": {
   "1780253597": {
    "tipo": "nuevo",
-   "paso": "cat",
+   "paso": "desc",
    "datos": {
     "n": "Triciclo LaiTunning",
-    "pv": 480000
+    "pv": 480000,
+    "g": "vehiculos",
+    "c": "Triciclos"
    }
   }
  }
