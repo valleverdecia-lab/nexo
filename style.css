@@ -297,3 +297,6 @@ body{background:radial-gradient(1100px 680px at 84% -8%,rgba(165,139,255,.18),tr
 .bombillo{display:inline-grid;place-items:center;color:#79f2e1;font-size:.72em;line-height:1;text-shadow:0 0 12px rgba(121,242,225,.9);margin-right:6px;animation:bulb-pulse 2.8s ease-in-out infinite}
 @keyframes bulb-pulse{50%{filter:drop-shadow(0 0 9px rgba(121,242,225,.85));transform:scale(1.14)}}
 @media(prefers-reduced-motion:reduce){.bombillo{animation:none}}
+
+/* brand signal */
+.logo i{background:#79f2e1;box-shadow:0 0 24px rgba(121,242,225,.85)}
