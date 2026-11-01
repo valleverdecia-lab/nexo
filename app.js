@@ -266,3 +266,23 @@ if(matchMedia('(hover:hover) and (pointer:fine)').matches){
 addEventListener("load",()=>setTimeout(()=>document.body.classList.add("go"),reduce?0:300));
 
 pintarChips(); pintarCarroN(); aplicar();
+
+/* ---------- señal de interacción local ---------- */
+(function(){
+  const key='nexo-interacciones-v2', sessionKey='nexo-visita-contada-v1', baseline=103;
+  let count=baseline;
+  try{count=Math.max(baseline,+(localStorage.getItem(key)||baseline))}catch(e){}
+  try{
+    if(!sessionStorage.getItem(sessionKey)){
+      count+=1; localStorage.setItem(key,String(count)); sessionStorage.setItem(sessionKey,'1');
+    }
+  }catch(e){}
+  const out=document.querySelector('#interacciones-n');
+  const paint=()=>{if(out)out.textContent=count.toLocaleString('es-ES')};
+  const hit=()=>{count+=1;try{localStorage.setItem(key,String(count))}catch(e){};paint()};
+  paint();
+  ['pointerdown','change','submit'].forEach(type=>document.addEventListener(type,e=>{
+    if(e.target.closest('#interacciones,header,footer')) return;
+    if(e.target.closest('button,a,input,select,.pieza')) hit();
+  },{passive:true}));
+})();

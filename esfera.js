@@ -9,6 +9,7 @@
 
   let W = 0, H = 0, cx = 0, cy = 0, R = 0, dpr = 1;
   let particles = [];
+  let wordPoints = [];
   let rotationY = 0, rotationX = 0.35, tiltX = 0, tiltY = 0, t = 0;
   let visible = true, running = false;
   let burstStart = -99;
@@ -33,14 +34,28 @@
 
   function createParticles() {
     const n = W < 700 ? 520 : 900;
+    const wordCanvas = document.createElement('canvas');
+    wordCanvas.width = 720; wordCanvas.height = 190;
+    const wordCtx = wordCanvas.getContext('2d');
+    wordCtx.fillStyle = '#fff';
+    wordCtx.font = '900 154px Inter, Arial, sans-serif';
+    wordCtx.textAlign = 'center'; wordCtx.textBaseline = 'middle';
+    wordCtx.fillText('NEXO', 360, 96);
+    const pixels = wordCtx.getImageData(0, 0, wordCanvas.width, wordCanvas.height).data;
+    wordPoints = [];
+    for (let y = 0; y < wordCanvas.height; y += 5) for (let x = 0; x < wordCanvas.width; x += 5) {
+      if (pixels[(y * wordCanvas.width + x) * 4 + 3] > 80) wordPoints.push({x:(x / 360) - 1, y:(y / 95) - 1, z:(Math.random() - .5) * .14});
+    }
     particles = [];
     const golden = Math.PI * (3 - Math.sqrt(5));
     for (let i = 0; i < n; i++) {
       const y = 1 - (i / (n - 1)) * 2;
       const r = Math.sqrt(1 - y * y);
       const th = golden * i;
+      const word = wordPoints[i % wordPoints.length];
       particles.push({
         baseX: Math.cos(th) * r, baseY: y, baseZ: Math.sin(th) * r,
+        wordX: word.x * .88, wordY: word.y * .72, wordZ: word.z,
         x: 0, y: 0, z: 0,
         size: 0.9 + Math.random() * 1.4,
         bx: 0, by: 0, bz: 0
@@ -75,6 +90,7 @@
     if (tb < 0.22) f = 1 - Math.pow(1 - tb / 0.22, 3);
     else if (tb < 2.2) { const u = (tb - 0.22) / 1.98; f = 1 - (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2); }
     const pulse = 1 + Math.sin(t * 1.6) * 0.035;
+    const morph = mouse.active ? Math.min(1, (t - (burstStart + 0.4)) * 0.7) : 0;
     const tx = mouse.active ? ((mouse.y - cy) / (R * 3)) * 0.5 : 0;
     const ty = mouse.active ? ((mouse.x - cx) / W) * 0.6 : 0;
     tiltX += (tx - tiltX) * 0.05;
@@ -84,9 +100,10 @@
     ctx.globalCompositeOperation = "lighter";
 
     for (const p of particles) {
-      p.x = p.baseX * pulse + p.bx * f;
-      p.y = p.baseY * pulse + p.by * f;
-      p.z = p.baseZ * pulse + p.bz * f;
+      const sx = p.baseX * pulse + p.bx * f, sy = p.baseY * pulse + p.by * f, sz = p.baseZ * pulse + p.bz * f;
+      p.x = sx + (p.wordX - sx) * Math.max(0, Math.min(1, morph));
+      p.y = sy + (p.wordY - sy) * Math.max(0, Math.min(1, morph));
+      p.z = sz + (p.wordZ - sz) * Math.max(0, Math.min(1, morph));
 
       const projected = project(p.x, p.y, p.z, rotationY + tiltY, rotationX + tiltX);
       const px = projected.screenX;
