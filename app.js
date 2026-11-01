@@ -79,7 +79,7 @@ function tarjeta(p,i){
   const oro=(i%4===0||i%4===3);
   return `<article class="pieza${oro?" pieza-oro":""}" data-id="${p.s}" style="transition-delay:${Math.min(i,12)*.03}s" tabindex="0" role="button" aria-label="${esc(p.n)}">
     <div class="pieza-marco">
-      <img src="fotos/${p.f||p.s+".webp"}" alt="${esc(p.n)}" loading="lazy" decoding="async" width="1000" height="1000">
+      <img src="fotos/${p.f||p.s+".webp"}" alt="${esc(p.n)}" loading="lazy" decoding="async" fetchpriority="low" width="1000" height="1000">
       <button class="pieza-add" data-add="${p.s}" aria-label="Añadir al carrito: ${esc(p.n)}" title="Añadir al carrito">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       </button>

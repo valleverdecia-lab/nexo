@@ -1,187 +1,104 @@
 (() => {
-  const canvas = document.getElementById("esfera");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  const hero = document.getElementById("inicio");
-  const top = document.querySelector("header");
-  const kicker = document.querySelector("#inicio .kicker");
-  const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  let W = 0, H = 0, cx = 0, cy = 0, R = 0, dpr = 1;
-  let particles = [];
-  let wordPoints = [];
-  let rotationY = 0, rotationX = 0.35, tiltX = 0, tiltY = 0, t = 0;
-  let visible = true, running = false;
-  let burstStart = -99;
-  const ahora = () => performance.now() / 1000;
+  const canvas = document.getElementById('esfera');
+  const hero = document.getElementById('inicio');
+  if (!canvas || !hero) return;
+  const ctx = canvas.getContext('2d', { alpha: true });
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const top = document.querySelector('header');
+  const kicker = document.querySelector('#inicio .kicker');
+  const TAU = Math.PI * 2;
   const mouse = { x: -9999, y: -9999, active: false };
+  let W = 0, H = 0, cx = 0, cy = 0, R = 0, dpr = 1;
+  let particles = [], shapes = [], shapeIndex = 0, transitionAt = 0, nextChange = 0;
+  let visible = true, running = false, rotation = 0, tiltX = .32, tiltY = 0, targetTiltX = .32, targetTiltY = 0;
+
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const rand = (a, b) => a + Math.random() * (b - a);
 
   function resize() {
     const hr = hero.getBoundingClientRect();
     const y0 = (top ? top.getBoundingClientRect().bottom : 60) - hr.top;
-    const y1 = (kicker ? kicker.getBoundingClientRect().top : hr.height * 0.6) - hr.top;
+    const y1 = (kicker ? kicker.getBoundingClientRect().top : hr.height * .6) - hr.top;
     const gap = Math.max(160, y1 - y0 - 16);
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.75);
     W = hr.width; H = hr.height;
-    canvas.style.top = "0px";
-    canvas.style.height = H + "px";
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
+    canvas.style.top = '0px'; canvas.style.height = `${H}px`;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    cx = W / 2; cy = y0 + 8 + gap / 2;
-    R = Math.min(W * 0.36, gap * 0.4);
+    cx = W / 2; cy = y0 + 8 + gap / 2; R = Math.min(W * .36, gap * .4);
   }
 
-  function createParticles() {
-    const n = W < 700 ? 520 : 900;
-    const wordCanvas = document.createElement('canvas');
-    wordCanvas.width = 720; wordCanvas.height = 190;
-    const wordCtx = wordCanvas.getContext('2d');
-    wordCtx.fillStyle = '#fff';
-    wordCtx.font = '900 154px Inter, Arial, sans-serif';
-    wordCtx.textAlign = 'center'; wordCtx.textBaseline = 'middle';
-    wordCtx.fillText('NEXO', 360, 96);
-    const pixels = wordCtx.getImageData(0, 0, wordCanvas.width, wordCanvas.height).data;
-    wordPoints = [];
-    for (let y = 0; y < wordCanvas.height; y += 5) for (let x = 0; x < wordCanvas.width; x += 5) {
-      if (pixels[(y * wordCanvas.width + x) * 4 + 3] > 80) wordPoints.push({x:(x / 360) - 1, y:(y / 95) - 1, z:(Math.random() - .5) * .14});
+  function sampleText(text, fontSize = 150) {
+    const c = document.createElement('canvas'); c.width = 900; c.height = 220;
+    const x = c.getContext('2d'); x.fillStyle = '#fff';
+    x.font = `900 ${fontSize}px Inter, Arial, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(text, c.width / 2, c.height / 2);
+    const data = x.getImageData(0, 0, c.width, c.height).data, points = [];
+    const step = W < 700 ? 7 : 6;
+    for (let y = 0; y < c.height; y += step) for (let xx = 0; xx < c.width; xx += step) {
+      if (data[(y * c.width + xx) * 4 + 3] > 70) points.push({ x: (xx / 450) - 1, y: (y / 110) - 1, z: rand(-.08, .08) });
     }
-    particles = [];
-    const golden = Math.PI * (3 - Math.sqrt(5));
-    for (let i = 0; i < n; i++) {
-      const y = 1 - (i / (n - 1)) * 2;
-      const r = Math.sqrt(1 - y * y);
-      const th = golden * i;
-      const word = wordPoints[i % wordPoints.length];
-      particles.push({
-        baseX: Math.cos(th) * r, baseY: y, baseZ: Math.sin(th) * r,
-        wordX: word.x * .88, wordY: word.y * .72, wordZ: word.z,
-        x: 0, y: 0, z: 0,
-        size: 0.9 + Math.random() * 1.4,
-        bx: 0, by: 0, bz: 0
-      });
-    }
+    return points;
   }
 
-  function project(x, y, z, ry, rx) {
-    const cosY = Math.cos(ry), sinY = Math.sin(ry);
-    let x1 = x * cosY - z * sinY;
-    let z1 = x * sinY + z * cosY;
-    const cosX = Math.cos(rx), sinX = Math.sin(rx);
-    let y1 = y * cosX - z1 * sinX;
-    let z2 = y * sinX + z1 * cosX;
-    const persp = 2.6 / Math.max(1, 2.6 - z2);
-    return {
-      screenX: cx + x1 * R * persp,
-      screenY: cy + y1 * R * persp,
-      depth: Math.max(-1, Math.min(1, z2)),
-      scale: persp
-    };
+  function sphere() {
+    const points = [], n = 760, golden = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < n; i++) { const y = 1 - (i / (n - 1)) * 2, r = Math.sqrt(1 - y * y), a = golden * i; points.push({ x: Math.cos(a) * r, y, z: Math.sin(a) * r }); }
+    return points;
+  }
+  function tree() {
+    const points = [], add = (x, y, z = 0) => points.push({x, y, z});
+    for (let i = 0; i < 170; i++) add(rand(-.07, .07), .8 - i / 170 * 1.4, rand(-.06, .06));
+    const branches = [[-.02,-.15,-.72,-.55],[.02,-.05,.72,-.55],[-.03,-.35,-.55,-.2],[.03,-.28,.55,-.2],[0,.05,0,-.85]];
+    branches.forEach(([x1,y1,x2,y2]) => { for(let i=0;i<110;i++){const t=i/109; add(x1+(x2-x1)*t+rand(-.025,.025),y1+(y2-y1)*t+rand(-.025,.025),rand(-.05,.05));} });
+    for (let i=0;i<360;i++){const a=rand(0,TAU), r=Math.sqrt(Math.random())*.36, y=rand(-.98,.15)+(r*.25); add(Math.cos(a)*r,y,Math.sin(a)*r);}
+    return points;
+  }
+  function house() {
+    const points = [], line=(x1,y1,x2,y2,n=100)=>{for(let i=0;i<n;i++){const t=i/(n-1);points.push({x:x1+(x2-x1)*t+rand(-.015,.015),y:y1+(y2-y1)*t+rand(-.015,.015),z:rand(-.08,.08)});};};
+    line(-.9,.7,.9,.7); line(-.72,.7,-.72,-.25); line(.72,.7,.72,-.25); line(-.72,-.25,.72,-.25); line(-.88,-.25,0,-.92); line(0,-.92,.88,-.25); line(-.2,.7,-.2,.05); line(.2,.7,.2,.05); line(-.2,.05,.2,.05); line(-.13,-.25,-.13,.35); line(.13,-.25,.13,.35); line(-.13,.35,.13,.35); return points;
   }
 
-  function animate() {
-    if (!visible) { running = false; return; }
-    running = true;
-    t += 0.016;
-    rotationY += 0.0045;
-    rotationX += 0.0028; // vuelta completa también en vertical: se ve por arriba y por abajo
-    const tb = ahora() - burstStart;
-    let f = 0;
-    if (tb < 0.22) f = 1 - Math.pow(1 - tb / 0.22, 3);
-    else if (tb < 2.2) { const u = (tb - 0.22) / 1.98; f = 1 - (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2); }
-    const pulse = 1 + Math.sin(t * 1.6) * 0.035;
-    const morph = mouse.active ? Math.min(1, (t - (burstStart + 0.4)) * 0.7) : 0;
-    const tx = mouse.active ? ((mouse.y - cy) / (R * 3)) * 0.5 : 0;
-    const ty = mouse.active ? ((mouse.x - cx) / W) * 0.6 : 0;
-    tiltX += (tx - tiltX) * 0.05;
-    tiltY += (ty - tiltY) * 0.05;
-
-    ctx.clearRect(0, 0, W, H);
-    ctx.globalCompositeOperation = "lighter";
-
-    for (const p of particles) {
-      const sx = p.baseX * pulse + p.bx * f, sy = p.baseY * pulse + p.by * f, sz = p.baseZ * pulse + p.bz * f;
-      p.x = sx + (p.wordX - sx) * Math.max(0, Math.min(1, morph));
-      p.y = sy + (p.wordY - sy) * Math.max(0, Math.min(1, morph));
-      p.z = sz + (p.wordZ - sz) * Math.max(0, Math.min(1, morph));
-
-      const projected = project(p.x, p.y, p.z, rotationY + tiltY, rotationX + tiltX);
-      const px = projected.screenX;
-      const py = projected.screenY;
-
-      const dx = px - mouse.x;
-      const dy = py - mouse.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const interactionRadius = 170;
-      let push = 0;
-      if (mouse.active && distance < interactionRadius) {
-        push = (1 - distance / interactionRadius) * 26;
-      }
-
-      const drawX = px + (dx / (distance || 1)) * push;
-      const drawY = py + (dy / (distance || 1)) * push;
-
-      const depthAlpha = 0.6 + ((projected.depth + 1) / 2) * 0.4;
-      const size = Math.max(0.3, Math.min(6, p.size * projected.scale * (1 + push * 0.015)));
-
-      // Violeta (atrás) → amarillo dorado (adelante)
-      const k = Math.max(0, ((projected.depth + 1) / 2 - 0.1) / 0.9); // +10% violeta
-      const li = 1 + push * 0.02;
-      const r = Math.min(255, (165 + k * 90) * li) | 0;
-      const g = Math.min(255, (130 + k * 80) * li) | 0;
-      const b = Math.min(255, (255 - k * 175) * li) | 0;
-      const alpha = depthAlpha * (0.6 + push / 60);
-      ctx.beginPath();
-      ctx.arc(drawX, drawY, size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(alpha, 1)})`;
-      ctx.fill();
-    }
-    ctx.globalCompositeOperation = "source-over";
-    if (!quieto) requestAnimationFrame(animate); else running = false;
+  function createShapes() {
+    const fit = pts => pts.map(p => ({ x: p.x * .95, y: p.y * .78, z: p.z }));
+    shapes = [fit(sphere()), fit(sampleText('NEXO', 154)), fit(sampleText('BIENVENIDOS', 104)), fit(tree()), fit(house())];
+    const n = W < 700 ? 470 : 700;
+    particles = Array.from({length:n}, (_, i) => { const p = shapes[0][i % shapes[0].length]; return { x:p.x, y:p.y, z:p.z, tx:p.x, ty:p.y, tz:p.z, vx:0, vy:0, vz:0, size:rand(.75,1.9) }; });
+    transitionAt = performance.now(); nextChange = transitionAt + 5200;
   }
-
-  function setMouse(x, y) {
-    const r = canvas.getBoundingClientRect();
-    mouse.x = x - r.left;
-    mouse.y = y - r.top;
-    mouse.active = true;
+  function project(x, y, z) {
+    const cyy=Math.cos(rotation+tiltY), sy=Math.sin(rotation+tiltY), cxx=Math.cos(tiltX), sx=Math.sin(tiltX);
+    const xx=x*cyy-z*sy, zz=x*sy+z*cyy, yy=y*cxx-zz*sx, depth=y*sx+zz*cxx;
+    const persp=2.6/Math.max(1,2.6-depth); return {x:cx+xx*R*persp,y:cy+yy*R*persp,d:clamp((depth+1)/2),s:persp};
   }
-
-
-  function romper(x, y) {
-    const r = canvas.getBoundingClientRect();
-    const dx = x - (r.left + cx), dy = y - (r.top + cy);
-    if (Math.sqrt(dx * dx + dy * dy) > R * 1.25) return;
-    if (ahora() - burstStart < 0.6) return;
-    for (const p of particles) {
-      const fuerza = 0.5 + Math.random() * 1.1;
-      p.bx = p.baseX * fuerza + (Math.random() - 0.5) * 0.9;
-      p.by = p.baseY * fuerza + (Math.random() - 0.5) * 0.9;
-      p.bz = p.baseZ * fuerza + (Math.random() - 0.5) * 0.9;
-    }
-    burstStart = ahora();
-    if (!running) requestAnimationFrame(animate);
+  function changeShape(index) {
+    if (!particles.length) return;
+    shapeIndex = (index + shapes.length) % shapes.length; const target = shapes[shapeIndex];
+    particles.forEach((p,i) => { const q=target[i % target.length]; p.tx=q.x; p.ty=q.y; p.tz=q.z; p.vx=rand(-.45,.45); p.vy=rand(-.45,.45); p.vz=rand(-.35,.35); });
+    transitionAt=performance.now(); nextChange=transitionAt+5200;
+    if (!running && visible) requestAnimationFrame(frame);
   }
-  window.addEventListener("pointerdown", e => romper(e.clientX, e.clientY), { passive: true });
-
-  window.addEventListener("resize", () => { resize(); createParticles(); if (quieto) animate(); });
-  window.addEventListener("mousemove", e => setMouse(e.clientX, e.clientY), { passive: true });
-  document.addEventListener("mouseleave", () => { mouse.active = false; });
-  window.addEventListener("touchmove", e => {
-    if (e.touches.length > 0) setMouse(e.touches[0].clientX, e.touches[0].clientY);
-  }, { passive: true });
-  window.addEventListener("touchend", () => { mouse.active = false; });
-
-  new IntersectionObserver(es => {
-    visible = es[0].isIntersecting;
-    if (visible && !running) requestAnimationFrame(animate);
-  }).observe(hero);
-
-  resize();
-  createParticles();
-  requestAnimationFrame(animate);
-  const again = () => { resize(); createParticles(); };
-  window.addEventListener("load", again);
-  if (document.fonts) document.fonts.ready.then(again);
-  setTimeout(again, 1200);
+  function frame(now) {
+    if (!visible) { running=false; return; }
+    running=true; const elapsed=now-transitionAt, morph=ease(clamp(elapsed/1050)), burst=1-clamp(elapsed/900);
+    rotation += .0028; targetTiltX += (mouse.active ? ((mouse.y-cy)/(R*3))*.28 : .32-targetTiltX)*.035; targetTiltY += (mouse.active ? ((mouse.x-cx)/W)*.42 : -targetTiltY)*.035; tiltX += (targetTiltX-tiltX)*.08; tiltY += (targetTiltY-tiltY)*.08;
+    if (!reduced && now>nextChange) changeShape(shapeIndex+1);
+    ctx.clearRect(0,0,W,H); ctx.globalCompositeOperation='lighter';
+    particles.forEach(p=>{
+      p.x += (p.tx-p.x)*morph*.12 + p.vx*burst*.018; p.y += (p.ty-p.y)*morph*.12 + p.vy*burst*.018; p.z += (p.tz-p.z)*morph*.12 + p.vz*burst*.018;
+      const q=project(p.x,p.y,p.z), dx=q.x-mouse.x, dy=q.y-mouse.y, dist=Math.hypot(dx,dy), push=mouse.active&&dist<150?(1-dist/150)*12:0;
+      const x=q.x+(dx/(dist||1))*push, y=q.y+(dy/(dist||1))*push, k=q.d, size=Math.max(.35,Math.min(4.5,p.size*q.s*(1+push*.01)));
+      const r=Math.round(110+k*145), g=Math.round(220+k*35), b=Math.round(218-k*20), a=.42+k*.5;
+      ctx.beginPath(); ctx.arc(x,y,size,0,TAU); ctx.fillStyle=`rgba(${r},${g},${b},${a})`; ctx.fill();
+    });
+    ctx.globalCompositeOperation='source-over'; if (!reduced) requestAnimationFrame(frame); else running=false;
+  }
+  function pointer(x,y) { const r=canvas.getBoundingClientRect(); mouse.x=x-r.left; mouse.y=y-r.top; mouse.active=true; }
+  canvas.addEventListener('pointermove', e=>pointer(e.clientX,e.clientY), {passive:true});
+  canvas.addEventListener('pointerleave', ()=>{mouse.active=false}, {passive:true});
+  canvas.addEventListener('pointerdown', e=>{ pointer(e.clientX,e.clientY); changeShape(shapeIndex+1); }, {passive:true});
+  window.addEventListener('resize', ()=>{resize();createShapes();if(reduced)frame(performance.now())},{passive:true});
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting;if(visible&&!running)requestAnimationFrame(frame)}).observe(hero);
+  resize(); createShapes(); requestAnimationFrame(frame);
 })();
