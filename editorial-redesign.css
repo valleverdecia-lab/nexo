@@ -1,0 +1,115 @@
+/* ══ NEXO / editorial 3D reconstruction ═══════════════════
+   Direction: contact-sheet editorial + liquid object.
+   Palette is intentionally limited to Nexo black, aqua and electric indigo.
+   Product, category, testimonial and WhatsApp colors remain owned by the
+   original interface rules above this layer. */
+:root{
+  --nexo-black:#050508;
+  --nexo-aqua:#67d9ff;
+  --nexo-indigo:#625bff;
+  --nexo-white:#f5f7ff;
+  --editorial-ease:cubic-bezier(.19,1,.22,1);
+}
+
+body{background:var(--nexo-black);color:var(--nexo-white)}
+header{mix-blend-mode:normal}
+header nav{height:72px;padding-inline:clamp(18px,4vw,48px);background:transparent!important;backdrop-filter:none!important}
+header nav .logo{position:static;transform:none;order:1;margin-right:auto;margin-left:18px;font-size:17px;letter-spacing:-.03em}
+.logo i{background:var(--nexo-aqua);box-shadow:0 0 28px var(--nexo-aqua)}
+.menu-btn{order:0;border-radius:0}
+.nav-der{order:2}
+.cta{border-radius:75px;border-color:rgba(103,217,255,.45);color:var(--nexo-aqua);padding:10px 18px;transition:background 1s var(--editorial-ease),color 1s var(--editorial-ease),border-color 1s var(--editorial-ease)}
+.cta:hover{background:var(--nexo-aqua);color:var(--nexo-black);border-color:var(--nexo-aqua)}
+#bar{background:linear-gradient(90deg,var(--nexo-aqua),var(--nexo-indigo));height:2px}
+
+/* Intro as a two-panel editorial object */
+.presentacion{min-height:100svh;padding:clamp(92px,11vw,148px) clamp(18px,4vw,58px) clamp(64px,8vw,110px);background:var(--nexo-black);border:0;display:grid;align-items:end}
+.presentacion::before{content:"";position:absolute;inset:0;background:radial-gradient(52% 58% at 78% 38%,rgba(98,91,255,.25),transparent 68%),radial-gradient(38% 48% at 52% 56%,rgba(103,217,255,.16),transparent 72%);z-index:-2;pointer-events:none}
+.presentacion::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 46%,rgba(103,217,255,.06) 50%,transparent 54%);transform:translateX(-24%);animation:liquidSweep 12s var(--editorial-ease) infinite alternate;z-index:-1;pointer-events:none}
+@keyframes liquidSweep{to{transform:translateX(24%)}}
+.presentacion-halo{right:4%;top:15%;width:min(58vw,720px);height:min(58vw,720px);border:1px solid rgba(103,217,255,.28);box-shadow:0 0 160px rgba(98,91,255,.18),inset 0 0 120px rgba(103,217,255,.06);animation:editorialHalo 11s var(--editorial-ease) infinite alternate}
+@keyframes editorialHalo{to{transform:scale(1.05) rotate(16deg);border-color:rgba(98,91,255,.55)}}
+.presentacion-grid{width:100%;max-width:1400px;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:clamp(28px,8vw,120px);align-items:end}
+.presentacion-copy{max-width:850px}
+.presentacion-kicker{font-size:10px;letter-spacing:.28em;color:var(--nexo-aqua);margin-bottom:30px}
+.presentacion-kicker span{background:var(--nexo-aqua);box-shadow:0 0 26px var(--nexo-aqua)}
+.presentacion h2{font-family:var(--s);font-weight:300;font-size:clamp(52px,8.5vw,138px);letter-spacing:-.075em;line-height:.82;max-width:1000px}
+.presentacion h2 em{background:linear-gradient(100deg,var(--nexo-aqua),#d9fbff 34%,var(--nexo-indigo));-webkit-background-clip:text;background-clip:text;color:transparent}
+.presentacion-lead{font-size:clamp(17px,1.8vw,24px);max-width:590px;line-height:1.25;margin-top:38px}
+.presentacion-body{max-width:500px;font-size:14px;line-height:1.55}
+.presentacion-pilares{gap:18px;margin-top:48px;max-width:760px}
+.presentacion-pilares>div{border-top:1px solid rgba(103,217,255,.35);padding-top:14px}
+.presentacion-pilares b{color:var(--nexo-aqua)}
+.presentacion-pilares span{font-family:var(--s);font-size:17px}
+.presentacion-cta{border-radius:75px;padding:14px 22px;border-color:rgba(103,217,255,.36);background:rgba(103,217,255,.07);box-shadow:none;transition:transform 1s var(--editorial-ease),background 1s var(--editorial-ease)}
+.presentacion-cta:hover{transform:translateY(-4px);background:rgba(98,91,255,.18)}
+.presentacion-wa{color:var(--nexo-aqua)}
+
+/* The visual is a floating 3D artefact, not a generic illustration. */
+.presentacion-visual{min-height:min(52vw,590px);perspective:1200px;transform:none;animation:none;transform-style:preserve-3d}
+.presentacion-visual::before{content:"NEXO / 2026";position:absolute;right:3%;top:7%;font:10px var(--m);letter-spacing:.28em;color:rgba(103,217,255,.65);transform:rotate(90deg);transform-origin:right top}
+.visual-ring{border-radius:0;transform:rotate(45deg) skew(-8deg);border-color:rgba(103,217,255,.28)}
+.ring-a{width:75%;animation:objectOrbit 18s linear infinite}
+.ring-b{width:54%;border-color:rgba(98,91,255,.55);animation:objectOrbit 12s linear infinite reverse}
+@keyframes objectOrbit{to{transform:rotate(405deg) skew(-8deg)}}
+.visual-card{border-radius:0;width:min(330px,78%);aspect-ratio:1.18/.86;padding:26px;border-color:rgba(103,217,255,.44);box-shadow:none;transform-style:preserve-3d;transition:transform 1.2s var(--editorial-ease)}
+.card-back{transform:translate(42px,-62px) rotateY(-18deg) rotateZ(7deg);background:linear-gradient(135deg,rgba(98,91,255,.32),rgba(5,5,8,.62))}
+.card-front{transform:translate(-22px,42px) rotateY(16deg) rotateZ(-5deg);background:linear-gradient(135deg,rgba(103,217,255,.17),rgba(5,5,8,.88))}
+.presentacion-visual:hover .card-back{transform:translate(58px,-76px) rotateY(-26deg) rotateZ(10deg)}
+.presentacion-visual:hover .card-front{transform:translate(-36px,52px) rotateY(24deg) rotateZ(-8deg)}
+.visual-card strong{font-family:var(--s);font-weight:300;letter-spacing:-.06em}
+.card-front i{color:var(--nexo-aqua)}
+
+/* Hero as the second full-bleed object */
+#inicio{min-height:100svh;padding-bottom:86px;background:var(--nexo-black)}
+#inicio::before{background:radial-gradient(58% 62% at 50% 44%,rgba(98,91,255,.17),transparent 70%),radial-gradient(40% 34% at 18% 70%,rgba(103,217,255,.12),transparent 70%)}
+.orb{background:conic-gradient(var(--nexo-aqua),var(--nexo-indigo),#b0f2ff,var(--nexo-aqua));filter:blur(52px);opacity:.28}
+.hero-cont{max-width:1100px}
+.hero-cont h1{font-family:var(--s);font-weight:300;font-size:clamp(74px,13vw,190px);letter-spacing:-.09em;line-height:.77;max-width:1000px}
+.hero-cont .sub{max-width:420px;margin-top:42px}
+.hero-cont .sub p{font-size:15px;line-height:1.5}
+.scroll{border:1px solid rgba(103,217,255,.35);border-radius:75px;padding:10px 16px;bottom:28px;transition:background 1s var(--editorial-ease)}
+.scroll:hover{background:rgba(103,217,255,.1)}
+.mouse{border-color:rgba(103,217,255,.5)}
+.mouse i{background:var(--nexo-aqua)}
+
+/* Editorial section rhythm; products and their existing colors stay readable. */
+.mq{border-color:rgba(103,217,255,.2);padding:22px 0;background:#07070c}
+.mq span::after{color:var(--nexo-aqua)}
+.pad{max-width:1400px;margin-inline:auto;padding-block:clamp(92px,12vw,170px)}
+.lbl{display:none}
+.pad h2.d{font-family:var(--s);font-weight:300;font-size:clamp(48px,8vw,116px);letter-spacing:-.075em;line-height:.82;max-width:1000px}
+.pad h2.d em{color:var(--nexo-aqua)}
+.sec-nota{font-size:16px;line-height:1.45;max-width:500px;margin-top:28px}
+.filtros{border-radius:0;border-color:rgba(103,217,255,.24);background:rgba(9,10,18,.75);backdrop-filter:blur(20px);padding:28px;margin-top:64px}
+.big-mas,.tab,.chip,.flecha,.filtros input,.filtros select{border-radius:75px}
+.carrusel{border-radius:0;border-color:rgba(103,217,255,.22);background:#090a12}
+.interacciones-card{border-radius:0;border-color:rgba(103,217,255,.26);background:linear-gradient(135deg,rgba(103,217,255,.08),rgba(98,91,255,.12))}
+
+/* Contact becomes the saturated closing stage; WhatsApp CTA rules remain intact. */
+#contacto{max-width:none;padding-inline:clamp(20px,7vw,110px);background:var(--nexo-indigo);color:var(--nexo-black)}
+#contacto h2.d{color:var(--nexo-black)}
+#contacto h2.d em{color:var(--nexo-black);-webkit-text-fill-color:var(--nexo-black)}
+#contacto .sec-nota{color:rgba(5,5,8,.72)}
+#contacto .big{box-shadow:none}
+footer{max-width:none;border-top:0;background:var(--nexo-black);padding:clamp(36px,6vw,74px) clamp(20px,4vw,58px);font-size:10px}
+footer .f-cats a{color:var(--nexo-aqua)}
+
+@media(max-width:759px){
+  header nav .logo{margin-left:8px}
+  .presentacion{padding-top:106px;min-height:auto}
+  .presentacion-grid{grid-template-columns:1fr;gap:24px}
+  .presentacion-visual{min-height:310px;order:-1}
+  .presentacion h2{font-size:clamp(56px,16vw,100px);line-height:.84}
+  .presentacion-lead{margin-top:26px}
+  .presentacion-pilares{margin-top:34px;gap:9px}
+  .presentacion-pilares span{font-size:15px}
+  .presentacion-pilares small{font-size:10px}
+  .presentacion-cta{width:100%;border-radius:75px}
+  #inicio{min-height:82svh}
+  .hero-cont h1{font-size:clamp(78px,20vw,142px)}
+  .pad{padding-block:88px}
+  .pad h2.d{font-size:clamp(54px,15vw,94px)}
+  #contacto{padding-inline:20px}
+}
+@media(prefers-reduced-motion:reduce){.presentacion::after,.presentacion-halo,.ring-a,.ring-b,.presentacion-visual,.orb{animation:none!important}.visual-card{transition:none!important}}
