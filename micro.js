@@ -131,7 +131,7 @@
   function retrocede() { pila.unshift(pila.pop()); idx = (idx - 1 + cards.length) % cards.length; pintar(); }
   function auto(on) {
     if (timer) { clearInterval(timer); timer = null; }
-    if (on && !reducido) timer = setInterval(avanza, 5200);
+    if (on && !reducido) timer = setInterval(avanza, 8700);
   }
   prev.addEventListener('click', () => { retrocede(); auto(true); });
   next.addEventListener('click', () => { avanza(); auto(true); });
