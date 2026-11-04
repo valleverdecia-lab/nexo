@@ -113,3 +113,8 @@ footer .f-cats a{color:var(--nexo-aqua)}
   #contacto{padding-inline:20px}
 }
 @media(prefers-reduced-motion:reduce){.presentacion::after,.presentacion-halo,.ring-a,.ring-b,.presentacion-visual,.orb{animation:none!important}.visual-card{transition:none!important}}
+
+/* Spline data field: animated behind products, never blocking interactions. */
+#catalogo{position:relative;isolation:isolate;overflow:hidden}
+#spline-flow{position:absolute;z-index:0;inset:0;width:100%;height:100%;pointer-events:none;opacity:.9;mix-blend-mode:screen}
+#catalogo>.lbl,#catalogo>h2,#catalogo>.sec-nota,#catalogo>.filtros,#catalogo>.vitrina,#catalogo>.centrar,#catalogo>#vacio{position:relative;z-index:1}
