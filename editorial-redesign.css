@@ -113,10 +113,3 @@ footer .f-cats a{color:var(--nexo-aqua)}
   #contacto{padding-inline:20px}
 }
 @media(prefers-reduced-motion:reduce){.presentacion::after,.presentacion-halo,.ring-a,.ring-b,.presentacion-visual,.orb{animation:none!important}.visual-card{transition:none!important}}
-
-/* Lightweight moving-line atmosphere: behind content, never over controls. */
-#line-flow{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:.62;mix-blend-mode:screen}
-body>header,body>main,body>footer{position:relative;z-index:1}
-#menu-movil,#carro-fondo,#carro,dialog,#wa-flotante,#carro-btn,#subir{z-index:55}
-@media(max-width:759px){#line-flow{opacity:.42}}
-@media(prefers-reduced-motion:reduce){#line-flow{opacity:.18}}
