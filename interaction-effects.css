@@ -1,0 +1,66 @@
+/* Nexo interaction layer: crossfade + shared-element feel + restrained blur. */
+:root{--nexo-purple:#625bff;--nexo-purple-soft:rgba(98,91,255,.16);--nexo-purple-line:rgba(98,91,255,.5);--motion:cubic-bezier(.19,1,.22,1)}
+
+/* Testimonials: a compact elastic carousel with one shared visual frame. */
+.resenas-editorial{overflow:hidden}
+.resenas-heading{display:flex;justify-content:space-between;gap:40px;align-items:end;margin-bottom:42px}
+.resenas-heading .sec-nota{max-width:350px;margin:0}
+.testimonial-carousel{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr) 52px;align-items:center;gap:14px;min-height:330px;padding:24px;border-radius:0!important;border:1px solid rgba(98,91,255,.34);background:linear-gradient(135deg,rgba(98,91,255,.12),rgba(5,5,8,.4));overflow:hidden}
+.testimonial-carousel::before{content:"";position:absolute;width:320px;height:320px;right:12%;top:-45%;border-radius:50%;background:var(--nexo-purple);filter:blur(90px);opacity:.11;pointer-events:none}
+.testimonial-carousel .riel-clip{grid-column:2;min-width:0;overflow:hidden;position:relative;z-index:1}
+.testimonial-carousel .riel{display:flex;transition:transform .9s var(--motion);will-change:transform}
+.testimonial-carousel .riel>li{flex:0 0 50%;padding:26px 34px;min-height:255px;border-left:1px solid rgba(98,91,255,.26);transition:opacity .6s var(--motion),filter .6s var(--motion),transform .6s var(--motion)}
+.testimonial-carousel .riel>li:nth-child(even){opacity:.66;filter:blur(.35px)}
+.testimonial-carousel .riel>li:hover{opacity:1;filter:none;transform:translateY(-4px)}
+.testimonial-carousel .flecha{grid-row:1;position:relative;z-index:2;border-color:rgba(98,91,255,.5);color:#a7a2ff}
+.testimonial-carousel .flecha:hover{background:var(--nexo-purple);color:#fff;border-color:var(--nexo-purple)}
+.testimonial-dots{grid-column:2;display:flex;gap:7px;justify-content:center;position:absolute;bottom:13px;left:0;right:0;z-index:2}
+.testimonial-dots button{width:5px;height:5px;padding:0;border:0;border-radius:50%;background:rgba(98,91,255,.35);transition:transform .6s var(--motion),background .6s var(--motion)}
+.testimonial-dots button.is-active{background:var(--nexo-aqua);transform:scale(1.8)}
+
+/* Purple offer field: four panels, fixed shared layout, active panel expands. */
+.oferta-accordion-section{max-width:none!important;padding-inline:clamp(20px,7vw,110px);background:var(--nexo-purple);color:#fff;position:relative;overflow:hidden}
+.oferta-accordion-section::before{content:"";position:absolute;inset:0;background:radial-gradient(55% 80% at 90% 20%,rgba(103,217,255,.26),transparent 60%),linear-gradient(120deg,rgba(5,5,8,.16),transparent 50%);pointer-events:none}
+.oferta-accordion-section>*{position:relative;z-index:1}
+.oferta-accordion-section .lbl{color:rgba(255,255,255,.7)}
+.oferta-accordion-section .lbl i{background:#fff}
+.oferta-head{display:flex;align-items:end;justify-content:space-between;gap:30px}
+.oferta-head h2{color:#fff}
+.oferta-head h2 em{color:#050508;-webkit-text-fill-color:#050508}
+.oferta-head .sec-nota{color:rgba(255,255,255,.78);max-width:340px;margin:0}
+.oferta-accordion{display:flex;height:clamp(360px,48vw,520px);gap:6px;margin-top:64px}
+.oferta-panel{position:relative;display:flex;flex:1;flex-direction:column;justify-content:flex-end;align-items:flex-start;text-align:left;min-width:0;overflow:hidden;padding:24px;border:1px solid rgba(255,255,255,.25);border-radius:0;background:rgba(5,5,8,.18);color:#fff;transition:flex 1s var(--motion),background .8s var(--motion),filter .8s var(--motion);cursor:pointer}
+.oferta-panel::after{content:"";position:absolute;inset:auto 0 0;height:62%;background:linear-gradient(transparent,rgba(5,5,8,.56));pointer-events:none}
+.oferta-panel:hover,.oferta-panel.is-active{flex:2.55;background:rgba(5,5,8,.32)}
+.oferta-panel:not(.is-active){filter:saturate(.72) blur(.15px)}
+.oferta-panel .oferta-index,.oferta-panel strong,.oferta-panel small,.oferta-panel i{position:relative;z-index:1}
+.oferta-index{font:10px var(--m);color:var(--nexo-aqua);margin-bottom:auto}
+.oferta-panel strong{font:clamp(27px,4vw,58px)/.9 var(--s);font-weight:300;letter-spacing:-.06em;white-space:nowrap}
+.oferta-panel small{max-width:260px;margin-top:15px;font:14px/1.35 var(--s);opacity:0;transform:translateY(12px);transition:opacity .7s var(--motion),transform .7s var(--motion)}
+.oferta-panel.is-active small,.oferta-panel:hover small{opacity:1;transform:none}
+.oferta-panel i{position:absolute;right:20px;top:20px;font-style:normal;font-size:24px;opacity:.7;transition:transform .7s var(--motion)}
+.oferta-panel.is-active i{transform:translate(4px,-4px)}
+.oferta-cta{display:flex;align-items:center;justify-content:space-between;gap:30px;margin-top:24px;padding-top:22px;border-top:1px solid rgba(255,255,255,.28)}
+.oferta-cta p{margin:0;color:rgba(255,255,255,.72)}
+.oferta-cta .big{background:#050508;color:#fff;box-shadow:none;border-radius:75px;padding:14px 24px;white-space:nowrap}
+.oferta-cta .big:hover{background:var(--nexo-aqua);color:#050508}
+
+/* Shared-element language for controls, panels, product detail and modal. */
+.pieza,.pieza-marco,.carrusel,.testimonial-carousel,.oferta-panel,.big,.tab,.chip,.filtros{view-transition-name:auto}
+.pieza,.pieza-marco,.oferta-panel,.testimonial-carousel,.filtros{transition:transform .8s var(--motion),background .8s var(--motion),border-color .8s var(--motion),filter .8s var(--motion)}
+.modal-producto[open] .modal-caja{animation:sharedIn .75s var(--motion) both}
+@keyframes sharedIn{from{opacity:0;transform:translateY(24px) scale(.97);filter:blur(12px)}to{opacity:1;transform:none;filter:none}}
+@media(max-width:759px){
+ .resenas-heading,.oferta-head,.oferta-cta{display:block}
+ .resenas-heading .sec-nota,.oferta-head .sec-nota{margin-top:22px}
+ .testimonial-carousel{grid-template-columns:42px minmax(0,1fr) 42px;padding:12px;min-height:430px}
+ .testimonial-carousel .riel>li{flex-basis:100%;padding:28px 14px;min-height:330px}
+ .testimonial-carousel .riel>li:nth-child(even){opacity:1;filter:none}
+ .oferta-accordion{height:480px;gap:4px;margin-top:42px}
+ .oferta-panel{padding:14px 12px}
+ .oferta-panel strong{font-size:32px;writing-mode:vertical-rl;transform:rotate(180deg)}
+ .oferta-panel.is-active strong,.oferta-panel:hover strong{writing-mode:horizontal-tb;transform:none}
+ .oferta-panel small{font-size:12px}
+ .oferta-cta .big{display:flex;margin-top:18px;justify-content:center}
+}
+@media(prefers-reduced-motion:reduce){.testimonial-carousel .riel,.oferta-panel,.oferta-panel small,.modal-producto[open] .modal-caja{transition:none!important;animation:none!important}}

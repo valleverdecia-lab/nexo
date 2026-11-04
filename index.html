@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=4">
 <link rel="stylesheet" href="editorial-redesign.css?v=1">
+<link rel="stylesheet" href="interaction-effects.css?v=1">
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
@@ -119,28 +120,28 @@
     </div>
   </section>
 
-  <section id="resenas" class="pad">
+  <section id="resenas" class="pad resenas-editorial">
     <div class="lbl"><b>02</b><i></i>Testimonios</div>
-    <h2 class="d">Lo que dicen <em>quienes compran.</em></h2>
-    <div class="carrusel glass">
-      <button class="flecha" id="prev" aria-label="Testimonio anterior">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-      </button>
+    <div class="resenas-heading"><h2 class="d">Lo que dicen <em>quienes compran.</em></h2><p class="sec-nota">Historias reales de personas que encontraron una compra más clara, acompañada y segura.</p></div>
+    <div class="testimonial-carousel glass" data-shared-group="testimonios">
+      <button class="flecha" id="prev" aria-label="Testimonio anterior"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
       <div class="riel-clip"><ul class="riel" id="riel"></ul></div>
-      <button class="flecha" id="next" aria-label="Testimonio siguiente">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-      </button>
+      <button class="flecha" id="next" aria-label="Testimonio siguiente"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+      <div class="testimonial-dots" id="testimonial-dots" aria-label="Seleccionar testimonio"></div>
     </div>
     <p class="resena-cta">¿Quiere ser el próximo en dejar su testimonio? <a href="https://wa.me/5356865093?text=Hola%2C%20quiero%20dejar%20mi%20testimonio%20sobre%20mi%20compra." target="_blank" rel="noopener">Escríbanos por WhatsApp</a></p>
   </section>
 
-  <section id="contacto" class="pad">
-    <div class="lbl"><b>03</b><i></i>Contacto</div>
-    <h2 class="d">Pregunte <em>sin compromiso.</em></h2>
-    <p class="sec-nota">Escríbanos por WhatsApp: contesta una persona, no un robot. Le decimos el precio del envío antes de que confirme nada.</p>
-    <div class="centrar" style="margin-top:48px">
-      <a class="big" href="https://wa.me/5356865093?text=Hola%2C%20los%20vi%20en%20la%20p%C3%A1gina." target="_blank" rel="noopener">Escribir por WhatsApp <span aria-hidden="true">↗</span></a>
+  <section id="contacto" class="pad oferta-accordion-section">
+    <div class="lbl"><b>03</b><i></i>Lo que ofrecemos</div>
+    <div class="oferta-head"><h2 class="d">Una mejor forma de <em>encontrar.</em></h2><p class="sec-nota">Elige lo que más te interesa y descubre cómo podemos ayudarte.</p></div>
+    <div class="oferta-accordion" id="oferta-accordion" role="tablist" aria-label="Lo que ofrece Nexo">
+      <button class="oferta-panel is-active" role="tab" aria-selected="true" data-offer="calidad"><span class="oferta-index">01</span><strong>Calidad</strong><small>Productos seleccionados y atención con garantías para nuestros clientes.</small><i>↗</i></button>
+      <button class="oferta-panel" role="tab" aria-selected="false" data-offer="gestores"><span class="oferta-index">02</span><strong>Gestores</strong><small>Una oportunidad para vender con respaldo, catálogo y acompañamiento.</small><i>↗</i></button>
+      <button class="oferta-panel" role="tab" aria-selected="false" data-offer="afiliados"><span class="oferta-index">03</span><strong>Afiliados</strong><small>Oportunidad para clippers y afiliados de marketing que quieran crecer.</small><i>↗</i></button>
+      <button class="oferta-panel" role="tab" aria-selected="false" data-offer="contacto"><span class="oferta-index">04</span><strong>Hablemos</strong><small>Escríbenos por WhatsApp con lo que más te interesa.</small><i>↗</i></button>
     </div>
+    <div class="oferta-cta"><p class="m" id="oferta-caption">Lo que ve es lo que llega.</p><a class="big" id="oferta-wa" href="https://wa.me/5356865093?text=Hola%2C%20me%20interesa%20la%20calidad%20de%20los%20productos%20de%20Nexo." target="_blank" rel="noopener">Escribir por WhatsApp <span aria-hidden="true">↗</span></a></div>
   </section>
 
   <section id="interacciones" class="pad interacciones-section">

@@ -194,16 +194,36 @@ $("#riel").innerHTML=RESENAS.map(r=>`<li>
   ${r.p?`<p class="resena-prod">${esc(r.p)}</p>`:""}
   <div class="resena-quien"><span class="resena-retrato" aria-hidden="true">${r.i}</span><span><strong>${esc(r.n)}</strong><span class="resena-meta">${esc(r.r)}${r.l?" · "+esc(r.l):""}</span></span></div>
 </li>`).join("");
+const dots=$("#testimonial-dots");
+if(dots) dots.innerHTML=RESENAS.map((_,i)=>`<button type="button" aria-label="Ver testimonio ${i+1}" data-review="${i}"></button>`).join("");
 let ri=0;
 const porVista=()=>matchMedia("(min-width:900px)").matches?2:1;
 function paso(dir){
   const max=RESENAS.length-porVista();
   ri=Math.max(0,Math.min(ri+dir,max));
   $("#riel").style.transform=`translateX(-${ri*(100/porVista())}%)`;
+  $$("#testimonial-dots button").forEach((b,i)=>b.classList.toggle("is-active",i===ri));
 }
 $("#prev").addEventListener("click",()=>paso(-1));
 $("#next").addEventListener("click",()=>paso(1));
+$("#testimonial-dots")?.addEventListener("click",e=>{const b=e.target.closest("[data-review]");if(b){ri=+b.dataset.review;paso(0)}});
+paso(0);
 addEventListener("resize",()=>paso(0));
+
+/* ---------- oferta / accordion ---------- */
+const OFFER_MESSAGES={
+  calidad:["Lo que ve es lo que llega.","Hola, me interesa la calidad y las garantías de los productos de Nexo."],
+  gestores:["Crece con un catálogo que responde.","Hola, me interesa la oportunidad para ser gestor de ventas de Nexo."],
+  afiliados:["Convierte tu alcance en oportunidad.","Hola, me interesa la oportunidad para ser clipper o afiliado de marketing de Nexo."],
+  contacto:["Cuéntanos qué estás buscando.","Hola, me interesa Nexo y quisiera conversar sobre las oportunidades disponibles."]
+};
+$("#oferta-accordion")?.addEventListener("click",e=>{
+  const panel=e.target.closest("[data-offer]"); if(!panel)return;
+  $$(".oferta-panel").forEach(p=>{const on=p===panel;p.classList.toggle("is-active",on);p.setAttribute("aria-selected",on)});
+  const [caption,message]=OFFER_MESSAGES[panel.dataset.offer]||OFFER_MESSAGES.contact;
+  $("#oferta-caption").textContent=caption;
+  $("#oferta-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(message)}`;
+});
 
 /* ---------- menú móvil ---------- */
 const menu=$("#menu-movil");
