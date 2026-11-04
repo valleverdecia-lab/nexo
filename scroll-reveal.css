@@ -1,0 +1,12 @@
+/* Scroll reveal: content rises into view instead of appearing all at once. */
+.pieza{will-change:opacity,transform;box-shadow:none!important;outline:none!important}
+.pieza.in{will-change:auto}
+.pieza:active,.pieza:focus,.pieza:focus-visible{box-shadow:none!important;outline:none!important}
+.pieza:hover{box-shadow:none!important}
+.pieza-oro:hover{box-shadow:none!important}
+button:focus:not(:focus-visible),a:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:not(:focus-visible){outline:none;box-shadow:none}
+@media(hover:none){.pieza:hover{transform:none!important;border-color:var(--bd)}.pieza:hover .pieza-marco img{transform:none}.pieza:hover .pieza-nombre{color:inherit}}
+@media(prefers-reduced-motion:reduce){.pieza{transition:none!important;transform:none!important}.pieza:not(.in){opacity:1}}
+
+/* Sections, descriptions and product cards share one quiet upward entrance. */
+.pad .lbl,.pad h2,.pad .sec-nota,.filtros,.carrusel,.testimonial-carousel,.oferta-panel,.producto-nav{will-change:opacity,transform}

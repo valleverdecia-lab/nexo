@@ -14,6 +14,9 @@ const SUBS_TODOS=Object.values(GRUPOS).flatMap(d=>d.subs);
 let g="", sub="", q="", orden="rel", visibles=36;
 const porId=Object.fromEntries(CATALOGO.map(p=>[p.s,p]));
 let lista=[...CATALOGO];
+const productReveal=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add("in");productReveal.unobserve(e.target)}
+}),{rootMargin:"0px 0px -8% 0px",threshold:.08});
 
 /* ---------- carrito ---------- */
 const LS=(()=>{try{return window["local"+"Storage"]}catch(e){return null}})();
@@ -109,7 +112,7 @@ function render(){
     vacioWa.hidden=true;
   }
   $("#cuenta").textContent=`${Math.min(visibles,total)} de ${total} productos${total<TOTAL?` (${TOTAL} en total)`:""}`;
-  $$(".pieza",v).forEach((el,i)=>{ if(i<visibles) requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("in"))); });
+  $$(".pieza",v).forEach(el=>productReveal.observe(el));
 }
 
 $("#tabs").addEventListener("click",e=>{
