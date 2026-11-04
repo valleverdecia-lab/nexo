@@ -939,3 +939,86 @@ footer{
   .hero-sub,.hero-ctas,.hero-check,#esfera{opacity:1;transform:none}
   .pieza{opacity:1;transform:none}
 }
+
+/* ===== swap (card swap) ===== */
+#swap { padding-block: clamp(56px, 9vw, 110px) }
+.swap { position: relative; height: 300px; max-width: 640px; margin: 34px auto 0 }
+.swap-card {
+  position: absolute; inset: 0 auto auto 50%;
+  background: linear-gradient(160deg, var(--bg2), var(--bg1));
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 22px;
+  padding: clamp(20px, 3.5vw, 30px);
+  box-shadow: 0 18px 50px rgba(0,0,0,.55);
+  width: min(100%, 640px);
+  transform: translateX(-50%) translateY(0) scale(1);
+  transform-origin: top center;
+  transition: transform .55s cubic-bezier(.22,.9,.24,1), opacity .55s ease;
+  cursor: pointer;
+  will-change: transform, opacity;
+}
+.swap-card[data-swap="1"], .swap-card[data-swap="2"], .swap-card[data-swap="3"] { background: linear-gradient(165deg, #182640, #0e1626); border: 1px solid rgba(148,190,235,.32); border-bottom: 2px solid rgba(103,217,255,.45); box-shadow: 0 10px 30px rgba(0,0,0,.5) }
+.swap-card[data-swap="1"] { transform: translateX(-50%) translateY(32px) scale(.95); opacity: .95; z-index: 3 }
+.swap-card[data-swap="2"] { transform: translateX(-50%) translateY(62px) scale(.90); opacity: .75; z-index: 2 }
+.swap-card[data-swap="3"] { transform: translateX(-50%) translateY(90px) scale(.85); opacity: .5; z-index: 1 }
+.swap-card[data-swap="0"] { z-index: 4 }
+.swap-k { color: var(--ac); letter-spacing: .18em; font-size: 11px; margin-bottom: 10px }
+.swap-card h3 { font-size: clamp(20px, 3vw, 27px); margin-bottom: 6px }
+.swap-grande { font-size: clamp(15px, 2vw, 17px); font-weight: 600; color: var(--tx); margin-bottom: 10px }
+.swap-card > p:last-child { color: var(--tx2); max-width: 54ch }
+.swap-ui {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; justify-content: center; gap: 18px; z-index: 5;
+}
+.swap-ui button {
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 1px solid rgba(103,217,255,.25); color: var(--tx);
+  background: rgba(103,217,255,.05); font-size: 17px; cursor: pointer;
+  transition: border-color .2s, background .2s, transform .2s;
+}
+.swap-ui button:hover { border-color: var(--ac); background: rgba(103,217,255,.12); transform: scale(1.06) }
+.swap-cont { font: 500 13px/1 var(--mono); color: var(--tx2); min-width: 44px; text-align: center }
+.swap-cta { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 26px; text-align: center }
+
+/* ===== galería en modal ===== */
+.m-galeria { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin }
+.m-galeria button {
+  flex: none; width: 54px; height: 54px; border-radius: 10px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.14); padding: 0; cursor: pointer; background: #000;
+  transition: border-color .2s, transform .2s;
+}
+.m-galeria button:hover { transform: scale(1.05) }
+.m-galeria button[aria-current="true"] { border-color: var(--ac); box-shadow: 0 0 0 2px rgba(103,217,255,.25) }
+.m-galeria img { width: 100%; height: 100%; object-fit: cover; display: block }
+#m-video { width: 100%; border-radius: 18px; display: block; background: #000; max-height: 420px }
+
+/* ===== llamada gratuita ===== */
+.contacto-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px }
+.cta-linea {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid rgba(103,217,255,.45); color: var(--ac);
+  padding: 13px 22px; border-radius: 999px; font-weight: 600; text-decoration: none;
+  transition: background .2s, box-shadow .2s, transform .2s;
+}
+.cta-linea:hover { background: rgba(103,217,255,.08); box-shadow: 0 0 24px rgba(103,217,255,.18) }
+
+.pieza-mult {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  background: rgba(4,6,11,.75); border: 1px solid rgba(103,217,255,.35);
+  color: var(--ac); border-radius: 8px; padding: 3px 8px;
+  font: 600 11px/1 var(--mono); backdrop-filter: blur(6px);
+}
+
+@media (max-width: 640px) {
+  .swap { height: 330px }
+  .swap-card { padding: 20px }
+  .swap-card > p:last-child { font-size: 13px }
+  .swap-grande { font-size: 14px }
+}
+@media (prefers-reduced-motion: reduce) {
+  .swap-card { transition: none }
+}
+
+.swap-card[data-swap="0"] { border-color: rgba(103,217,255,.35); box-shadow: 0 24px 70px rgba(0,0,0,.6), 0 0 0 1px rgba(103,217,255,.12), 0 0 46px rgba(103,217,255,.08) }
+.swap { height: 390px }
+@media (max-width: 640px) { .swap { height: 400px } }

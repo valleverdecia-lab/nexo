@@ -104,3 +104,55 @@
   .nav-der .cta-linea:hover::after{transform:scaleX(1)}`;
   document.head.appendChild(estilo);
 })();
+
+/* ===== card swap ===== */
+(function () {
+  const zona = document.getElementById('swap');
+  if (!zona) return;
+  const cards = [...zona.querySelectorAll('.swap-card[data-swap]')];
+  const prev = document.getElementById('swap-prev');
+  const next = document.getElementById('swap-next');
+  const cont = document.getElementById('swap-cont');
+  if (cards.length < 2 || !prev || !next) return;
+  let pila = cards.slice(); // pila[0] = carta de arriba
+  let idx = 0;
+  let timer = null;
+  let reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function pintar() {
+    pila.forEach((c, i) => {
+      c.setAttribute('data-swap', String(Math.min(i, 3)));
+      c.setAttribute('aria-hidden', i === 0 ? 'false' : 'true');
+      c.tabIndex = i === 0 ? 0 : -1;
+    });
+    if (cont) cont.textContent = (idx + 1) + ' / ' + cards.length;
+  }
+  function avanza() { pila.push(pila.shift()); idx = (idx + 1) % cards.length; pintar(); }
+  function retrocede() { pila.unshift(pila.pop()); idx = (idx - 1 + cards.length) % cards.length; pintar(); }
+  function auto(on) {
+    if (timer) { clearInterval(timer); timer = null; }
+    if (on && !reducido) timer = setInterval(avanza, 5200);
+  }
+  prev.addEventListener('click', () => { retrocede(); auto(true); });
+  next.addEventListener('click', () => { avanza(); auto(true); });
+  cards.forEach(c => c.addEventListener('click', () => { avanza(); auto(true); }));
+  zona.addEventListener('mouseenter', () => auto(false));
+  zona.addEventListener('mouseleave', () => auto(true));
+  let tX = null;
+  zona.addEventListener('touchstart', e => { tX = e.touches[0].clientX; auto(false); }, { passive: true });
+  zona.addEventListener('touchend', e => {
+    if (tX === null) return;
+    const d = e.changedTouches[0].clientX - tX;
+    if (Math.abs(d) > 40) { d < 0 ? avanza() : retrocede(); }
+    tX = null; auto(true);
+  });
+  // pausa cuando no está visible
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(en => {
+      en.forEach(x => auto(x.isIntersecting));
+    }, { threshold: .35 });
+    io.observe(zona);
+  }
+  pintar();
+  auto(true);
+})();

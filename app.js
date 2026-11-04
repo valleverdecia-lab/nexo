@@ -81,9 +81,12 @@ function aplicar(){
 function tarjeta(p,i){
   const agotado=p.e==="agotado";
   const oro=(i%4===0||i%4===3);
+  const foto=(p.fs&&p.fs[0])||p.f||p.s+".webp";
+  const mult=(p.fs&&p.fs.length>1)||p.vd;
   return `<article class="pieza${oro?" pieza-oro":""}" data-id="${p.s}" style="transition-delay:${Math.min(i,12)*.03}s" tabindex="0" role="button" aria-label="${esc(p.n)}">
     <div class="pieza-marco">
-      <img src="fotos/${p.f||p.s+".webp"}" alt="${esc(p.n)}" loading="lazy" decoding="async" fetchpriority="low" width="1000" height="1000">
+      <img src="fotos/${foto}" alt="${esc(p.n)}" loading="lazy" decoding="async" fetchpriority="low" width="1000" height="1000">
+      ${mult?`<span class="pieza-mult m">${p.vd?"▶":"▦"} ${p.vd?(p.fs?p.fs.length+" fotos + vídeo":"vídeo"):(p.fs.length+" fotos")}</span>`:""}
       <button class="pieza-add" data-add="${p.s}" aria-label="Añadir al carrito: ${esc(p.n)}" title="Añadir al carrito">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       </button>
@@ -148,7 +151,22 @@ let abierto="";
 function abrir(id){
   const p=porId[id]; if(!p)return;
   abierto=id;
-  $("#m-img").src=`fotos/${p.f||p.s+".webp"}`; $("#m-img").alt=p.n;
+  const fotos=(p.fs&&p.fs.length?p.fs:(p.f?[p.f]:[p.s+".webp"]));
+  $("#m-img").src=`fotos/${fotos[0]}`; $("#m-img").alt=p.n;
+  /* galería de varias fotos */
+  const gal=$("#m-galeria");
+  if(gal){
+    if(fotos.length>1){
+      gal.hidden=false;
+      gal.innerHTML=fotos.map((f,i)=>`<button class="m-thumb${i===0?" on":""}" data-i="${i}" aria-label="Foto ${i+1}"><img src="fotos/${esc(f)}" alt="" loading="lazy" decoding="async"></button>`).join("");
+    } else { gal.hidden=true; gal.innerHTML=""; }
+  }
+  /* vídeo-demo */
+  const vid=$("#m-video");
+  if(vid){
+    if(p.vd){ vid.hidden=false; vid.src=`fotos/${p.vd}`; vid.load(); }
+    else { vid.hidden=true; vid.pause(); vid.removeAttribute("src"); }
+  }
   $("#m-cat").textContent=`${GRUPO_NOMBRE[p.g]} · ${p.c}`;
   $("#m-nombre").textContent=p.n;
   const est=$("#m-estado"); est.className="estado estado--"+(p.e==="agotado"?"agotado":"hay");
@@ -179,6 +197,14 @@ $("#vitrina").addEventListener("click",e=>{
   const c=e.target.closest(".pieza");if(c)abrir(c.dataset.id);
 });
 $("#vitrina").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){if(e.target.closest("button"))return;const c=e.target.closest(".pieza");if(c){e.preventDefault();abrir(c.dataset.id)}}});
+$("#m-galeria")?.addEventListener("click",e=>{
+  const t=e.target.closest(".m-thumb"); if(!t)return;
+  const p=porId[abierto]; if(!p)return;
+  const fotos=(p.fs&&p.fs.length?p.fs:(p.f?[p.f]:[p.s+".webp"]));
+  const i=Number(t.dataset.i)||0;
+  $("#m-img").src=`fotos/${fotos[i]}`;
+  $$("#m-galeria .m-thumb").forEach(x=>x.classList.toggle("on",x===t));
+});
 $("#m-add").addEventListener("click",()=>{
   if(!abierto)return;
   addCarro(abierto);

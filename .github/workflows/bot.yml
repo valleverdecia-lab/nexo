@@ -35,6 +35,11 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GH_TOKEN: ${{ github.token }}
           BOT_DURACION_MS: "1500000"
+          # Opcionales (sí funcionan sin estar definidos):
+          # WHATSAPP_AVISO_URL: URL de CallMeBot terminada en &text= — avisa al WhatsApp del dueño al publicar
+          # OPENAI_API_KEY: si existe, el bot redacta las fichas con LLM en vez de plantillas
+          WHATSAPP_AVISO_URL: ${{ secrets.WHATSAPP_AVISO_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           if [ -z "$TELEGRAM_TOKEN" ]; then echo "Falta el secreto TELEGRAM_TOKEN"; exit 0; fi
           node bot/bot.mjs

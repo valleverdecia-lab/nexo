@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=10">
 <meta property="og:title" content="Nexo — Catálogo de productos para Cuba">
 <meta property="og:description" content="Más de 340 productos con foto real y precio claro. Entrega a domicilio y atención directa por WhatsApp.">
 <meta property="og:type" content="website">
@@ -73,6 +73,7 @@
         <li>Precio claro en USD</li>
         <li>Envío a domicilio</li>
         <li>Existencias confirmadas</li>
+        <li>Llamada gratis antes de pagar</li>
       </ul>
     </div>
     <div class="hero-esfera">
@@ -281,31 +282,48 @@
   </div>
 </section>
 
-<!-- ============ OFERTA / FAQ ============ -->
-<section id="oferta" class="oferta">
+<!-- ============ OPORTUNIDAD (card swap) ============ -->
+<section id="oportunidad" class="oportunidad">
   <div class="pad">
-    <p class="lbl mono">[ 06 — Oportunidades ]</p>
-    <h2>Cómo crecer<br>con Nexo.</h2>
-    <div class="oferta-grid">
-      <div id="oferta-accordion" class="oferta-accordion" role="tablist" aria-label="Oportunidades">
-        <button class="oferta-panel" data-offer="calidad" role="tab" aria-selected="false">
-          <span class="oferta-t">Garantía y calidad</span><span class="oferta-flecha" aria-hidden="true">+</span>
-        </button>
-        <button class="oferta-panel" data-offer="gestores" role="tab" aria-selected="false">
-          <span class="oferta-t">Gestores de ventas</span><span class="oferta-flecha" aria-hidden="true">+</span>
-        </button>
-        <button class="oferta-panel" data-offer="afiliados" role="tab" aria-selected="false">
-          <span class="oferta-t">Clippers y afiliados</span><span class="oferta-flecha" aria-hidden="true">+</span>
-        </button>
-        <button class="oferta-panel" data-offer="contacto" role="tab" aria-selected="false">
-          <span class="oferta-t">Otras consultas</span><span class="oferta-flecha" aria-hidden="true">+</span>
-        </button>
+    <p class="lbl mono">[ 06 — Oportunidad ]</p>
+    <h2>Somos una oportunidad<br>para…</h2>
+    <p class="sec-nota">Toque la carta para ver la siguiente. Cada una cuenta por qué.</p>
+
+    <div class="swap" id="swap" aria-label="Para quién es Nexo una oportunidad">
+      <article class="swap-card" data-swap>
+        <p class="swap-k mono m">[ 01 ]</p>
+        <h3>Sus clientes</h3>
+        <p class="swap-grande">Comprar a ciegas se acabó.</p>
+        <p>En Cuba, pedir algo por internet es un salto al vacío: foto genérica, precio oculto, vendedor que desaparece. Aquí cada producto trae foto real, precio claro y una <strong>llamada gratuita antes de pagar</strong> para que pregunte todo lo que quiera. Si no le convence, no compra.</p>
+      </article>
+      <article class="swap-card" data-swap>
+        <p class="swap-k mono m">[ 02 ]</p>
+        <h3>Sus gestores</h3>
+        <p class="swap-grande">Primera mano, sin atar capital.</p>
+        <p>Usted vende; nosotros resolvemos el resto: proveedor, catálogo, ficha del producto y entrega. Revende con margen <strong>sin comprar inventario ni montar tienda</strong>. Gana por cada venta que cierre, y el catálogo se actualiza solo.</p>
+      </article>
+      <article class="swap-card" data-swap>
+        <p class="swap-k mono m">[ 03 ]</p>
+        <h3>Sus clippers</h3>
+        <p class="swap-grande">Monetice su audiencia sin logística.</p>
+        <p>Comparta nuestros productos en sus canales: cada venta que llegue por usted genera <strong>comisión</strong>. Foto, ficha, existencias y entrega las llevamos nosotros. Usted solo comparte el enlace y cobra.</p>
+      </article>
+      <article class="swap-card" data-swap>
+        <p class="swap-k mono m">[ 04 ]</p>
+        <h3>Sus proveedores</h3>
+        <p class="swap-grande">Su producto, frente a todo el país.</p>
+        <p>Si produce o importa, publicamos su mercancía con <strong>ficha profesional y fotos reales</strong>, y la distribuimos a nuestra red de gestores y clippers. Usted vende más sin gastar un peso en marketing.</p>
+      </article>
+      <div class="swap-ui">
+        <button class="flecha" id="swap-prev" aria-label="Carta anterior">←</button>
+        <p class="swap-cont mono m" id="swap-cont">1 / 4</p>
+        <button class="flecha" id="swap-next" aria-label="Carta siguiente">→</button>
       </div>
-      <div class="oferta-lado">
-        <p class="oferta-caption d" id="oferta-caption">Cuéntanos qué estás buscando.</p>
-        <a class="cta cta-llena magnet" id="oferta-wa" href="https://wa.me/5356865093" target="_blank" rel="noopener">Conversar por WhatsApp <span aria-hidden="true">↗</span></a>
-        <p class="m">Le responde una persona, no un robot. Lunes a sábado, 9:00–18:00.</p>
-      </div>
+    </div>
+
+    <div class="swap-cta">
+      <a class="cta cta-llena magnet" href="https://wa.me/5356865093?text=Hola%2C%20quiero%20saber%20c%C3%B3mo%20ser%20gestor%20o%20clipper%20con%20Nexo." target="_blank" rel="noopener">Quiero mi oportunidad <span aria-hidden="true">↗</span></a>
+      <p class="m">Gestor, clipper o proveedor: escríbanos y hablamos hoy mismo.</p>
     </div>
   </div>
 </section>
@@ -316,9 +334,12 @@
     <p class="lbl mono">[ 07 — Contacto ]</p>
     <div class="contacto-grid">
       <div class="contacto-cta">
-        <h2>¿Alguna duda?<br><em>Escríbanos.</em></h2>
-        <p>Envíenos la lista de su carrito, una pregunta sobre cualquier producto, o pida el vídeo-demo de lo que le interese.</p>
-        <a class="cta cta-llena magnet" href="https://wa.me/5356865093?text=Hola%2C%20tengo%20una%20consulta%20sobre%20Nexo." target="_blank" rel="noopener">WhatsApp: +53 5686 5093 <span aria-hidden="true">↗</span></a>
+        <h2>¿Dudas antes<br>de comprar? <em>Hablamos.</em></h2>
+        <p>Agende una <strong>llamada gratuita</strong>: le llamamos, aclaramos todas sus dudas del producto, y luego usted decide si compra o no. Sin compromiso.</p>
+        <div class="contacto-ctas">
+          <a class="cta cta-llena magnet" href="https://wa.me/5356865093?text=Hola%2C%20quiero%20agendar%20una%20llamada%20gratuita%20antes%20de%20comprar." target="_blank" rel="noopener">Agendar llamada gratuita <span aria-hidden="true">↗</span></a>
+          <a class="cta cta-linea magnet" href="https://wa.me/5356865093?text=Hola%2C%20tengo%20una%20consulta%20sobre%20Nexo." target="_blank" rel="noopener">WhatsApp directo <span aria-hidden="true">↗</span></a>
+        </div>
         <div id="interacciones" class="interacciones">
           <p class="lbl mono">[ En vivo ]</p>
           <p class="m"><span id="interacciones-n">…</span> interacciones de personas en esta página</p>
@@ -406,7 +427,11 @@
 <dialog id="modal">
   <button class="cerrar" id="cerrar" aria-label="Cerrar">✕</button>
   <div class="modal-grid">
-    <div class="modal-foto"><img id="m-img" alt="" loading="lazy" decoding="async"></div>
+    <div class="modal-foto">
+      <img id="m-img" alt="" loading="lazy" decoding="async">
+      <video id="m-video" controls playsinline preload="metadata" hidden></video>
+      <div class="m-galeria" id="m-galeria" hidden></div>
+    </div>
     <div class="modal-datos">
       <p class="m m-cat"><span id="m-cat"></span> <span class="estado" id="m-estado"></span></p>
       <h3 class="d" id="m-nombre"></h3>
@@ -427,14 +452,14 @@
         <button class="big" id="m-add">Añadir al carrito</button>
         <a class="btn-linea" id="m-wa" href="#" target="_blank" rel="noopener">Preguntar por WhatsApp</a>
       </div>
-      <p class="m-nota">Si está agotado, escriba igual: le avisamos apenas vuelva a entrar.</p>
+      <p class="m-nota">¿Dudas? Agende una <strong>llamada gratuita</strong> antes de comprar y se lo explicamos todo. Si está agotado, escriba igual: le avisamos apenas vuelva a entrar.</p>
     </div>
   </div>
 </dialog>
 
 <script src="catalogo.js?v=mvsxtgc8" defer></script>
-<script src="esfera.js?v=5" defer></script>
-<script src="micro.js?v=5" defer></script>
+<script src="esfera.js?v=6" defer></script>
+<script src="micro.js?v=6" defer></script>
 <script src="app.js?v=mvsxtgc8" defer></script>
 </body>
 </html>

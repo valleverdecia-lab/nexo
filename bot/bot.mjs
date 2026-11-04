@@ -5,6 +5,7 @@ import path from "node:path";
 import vm from "node:vm";
 import crypto from "node:crypto";
 import { execSync } from "node:child_process";
+import { buscarEnLaWeb, generarFicha, generarFichaLocal, adivinarCategoria } from "./web.mjs";
 
 const RAIZ = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const TOKEN = process.env.TELEGRAM_TOKEN;
@@ -57,8 +58,19 @@ function slugDe(nombre) {
   while (buscarP(s)) s = `${base}-${i++}`;
   return s;
 }
-function textoVentaAuto(p) {
-  return `${p.n} es de esos productos que se notan desde el primer día. Resuelve lo que necesita, se ve bien en su casa y le da la tranquilidad de haber comprado algo que vale la pena. Escríbanos y se lo llevamos.`;
+/* extrae un nombre de producto razonable de un mensaje reenviado del proveedor */
+function nombreDeTexto(t) {
+  const lineas = String(t).split("\n").map(x => x.trim()).filter(Boolean)
+    .filter(x => !/usd|\$|cup|precio|http|wa\.me|whatsapp|\+\d{8,}|disponible|agotado|entrega|env[ií]o|stock|pedido|contact/i.test(x));
+  const cand = (lineas.slice(0, 3).sort((a, b) => b.length - a.length)[0] || "")
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "").replace(/[*_#]+/g, "").replace(/\s+/g, " ").trim();
+  return cand.slice(0, 80);
+}
+/* aviso opcional al WhatsApp del dueño (CallMeBot u otro webhook con ?text=) */
+async function avisoWhatsApp(texto) {
+  const url = process.env.WHATSAPP_AVISO_URL;
+  if (!url) return;
+  try { await fetch(url + encodeURIComponent(texto).slice(0, 300), { signal: AbortSignal.timeout(8000) }); } catch { /* no crítico */ }
 }
 
 // ---------- Telegram ----------
@@ -148,9 +160,9 @@ const MENU = teclado([
 ]);
 const AYUDA = `<b>Panel de Nexo</b>
 
-• <b>Agregar producto</b>: le pido nombre, precio, categoría, descripción y foto.
-• <b>Editar</b>: escriba cualquier palabra (ej. <i>sillón</i>) y toque el producto.
-• Dentro de cada producto puede cambiar precio, nombre, descripciones, foto, categoría, disponibilidad o borrarlo.
+• <b>Agregar producto</b>: elija <b>⚡ Fast</b> (reenvía el mensaje del proveedor; yo busco el producto en la web, redacto la ficha y solo le pregunto fotos y precio) o <b>🐢 Completa</b> (todo a mano, paso a paso).
+• Puede subir <b>varias fotos</b> (hasta 6) e incluso un <b>vídeo-demo</b> (hasta ~18 MB).
+• <b>Editar</b>: escriba cualquier palabra (ej. <i>sillón</i>) y toque el producto. Puede cambiar precio, nombre, descripciones, fotos, categoría, disponibilidad o borrarlo.
 • /cancelar detiene lo que esté haciendo.
 
 Los cambios aparecen en la web en 1–3 minutos.`;
@@ -232,45 +244,152 @@ async function aplicarEdicion(chat, campo, p, msg) {
   return mostrarFicha(chat, p);
 }
 
-// ---------- alta de productos (paso a paso) ----------
+// ---------- alta de productos (fast / lenta, varias fotos, video, web) ----------
+const fotoId = msg => msg.photo?.at(-1)?.file_id || (msg.document?.mime_type?.startsWith("image/") ? msg.document.file_id : null);
+const videoId = msg => (msg.video?.file_id) || (msg.document?.mime_type?.startsWith("video/") ? msg.document.file_id : null);
+
+/* busca en la web, redacta la ficha y la muestra */
+async function redactarFicha(chat, st) {
+  const d = st.datos;
+  await tg("sendChatAction", { chat_id: chat, action: "typing" });
+  const hallazgos = await buscarEnLaWeb(`${d.n} especificaciones ficha técnica`);
+  const ficha = await generarFicha(d.n, hallazgos, d.c);
+  d.dc = ficha.dc; d.dl = ficha.dl; d.sp = ficha.sp; d.v = ficha.v;
+  const adiv = adivinarCategoria(d.n, db.GRUPOS);
+  if (adiv) { d.g = adiv.g; d.c = adiv.c; }
+  estadoSucio = true;
+  const previo = `🔍 Busqué <b>${esc(d.n)}</b> en la web y redacté la ficha:\n\n<b>Desc. corta:</b> ${esc(d.dc)}\n<b>Texto de venta:</b> ${esc(d.v)}${d.sp?.length ? `\n<b>Especificaciones:</b>\n${d.sp.map(([k, v]) => `   · ${esc(k)}: ${esc(v)}`).join("\n")}` : ""}${d.c ? `\n\n📂 Categoría: <b>${esc(db.GRUPOS[d.g]?.nombre)} › ${esc(d.c)}</b> (puede cambiarla después buscando el producto)` : ""}`;
+  return enviar(chat, previo + "\n\nPuede ajustar todo después (busque el producto y toque «Editar»).");
+}
+
+/* crea el producto a partir del estado acumulado */
+async function crearProducto(chat, st) {
+  const d = st.datos;
+  const p = { s: slugDe(d.n), n: d.n, c: d.c, g: d.g, pv: d.pv, po: d.pv, e: "hay", dc: d.dc, dl: d.dl, sp: d.sp || [], v: d.v };
+  const archivos = [];
+  for (const fid of st.fotos.slice(0, 6)) {
+    try { archivos.push(await bajarFoto(fid, p.s)); } catch { /* foto suelta */ }
+  }
+  const ok = archivos.filter(Boolean);
+  if (ok.length === 1) p.f = ok[0];
+  else if (ok.length > 1) p.fs = ok;
+  if (st.video) {
+    try { p.vd = await bajarVideo(st.video, p.s); } catch { /* video suelto */ }
+  }
+  db.CATALOGO.unshift(p);
+  marcar(`Nuevo: ${p.n}`);
+  delete estado.pend[chat]; estadoSucio = true;
+  await enviar(chat, `✅ <b>${esc(p.n)}</b> agregado${p.fs ? ` con ${p.fs.length} fotos` : ""}${p.vd ? " y vídeo" : ""}. Aparecerá primero en el catálogo en 1–3 minutos.`);
+  return mostrarFicha(chat, p);
+}
+
+/* pregunta cuántas fotos y prepara la recolección */
+function preguntarFotos(chat, st) {
+  st.paso = "fotos-cuantas"; estadoSucio = true;
+  return enviar(chat, "🖼 ¿Cuántas fotos tiene el producto?", teclado([
+    [{ text: "1 foto", callback_data: "nfoto:1" }, { text: "2 fotos", callback_data: "nfoto:2" }, { text: "3 fotos", callback_data: "nfoto:3" }],
+    [{ text: "4 fotos", callback_data: "nfoto:4" }, { text: "5 fotos", callback_data: "nfoto:5" }, { text: "6 fotos", callback_data: "nfoto:6" }]
+  ]));
+}
+
 async function pasoNuevo(chat, msg) {
   const st = estado.pend[chat];
   const txt = (msg.text || msg.caption || "").trim();
   const d = st.datos;
-  if (st.paso === "nombre") {
+  const fid = fotoId(msg);
+  const vid = videoId(msg);
+
+  if (st.paso === "modo") return enviar(chat, "Toque <b>⚡ Fast</b> o <b>🐢 Completa</b> para empezar (o /cancelar).");
+
+  /* las fotos/vídeo pueden llegar en cualquier momento del alta: se acumulan */
+  if (fid && ["entrada", "nombre", "foto"].includes(st.paso) && !st.fotos.includes(fid) && st.fotos.length < 6) st.fotos.push(fid);
+  if (vid && !st.video) st.video = vid;
+
+  /* -------- modo FAST -------- */
+  if (st.modo === "fast") {
+    if (st.paso === "entrada") {
+      const nombre = nombreDeTexto(txt);
+      if (!nombre && !st.fotos.length && !st.video)
+        return enviar(chat, "⚡ Reenvíeme el mensaje del proveedor (texto y/o fotos), o escriba el nombre del producto (o /cancelar).");
+      if (nombre) {
+        d.n = nombre;
+        await redactarFicha(chat, st);
+        return preguntarFotos(chat, st);
+      }
+      st.paso = "nombre"; estadoSucio = true;
+      return enviar(chat, `📸 Recibido. ¿Cómo se llama el producto? (con el nombre lo busco en la web y redacto la ficha)`);
+    }
+    if (st.paso === "nombre") {
+      if (!txt) return enviar(chat, `📸 Foto guardada. Escríbame el nombre del producto (o /cancelar).`);
+      d.n = txt;
+      await redactarFicha(chat, st);
+      return preguntarFotos(chat, st);
+    }
+    if (st.paso === "fotos-cuantas") {
+      return enviar(chat, "Toque un botón de arriba para decirme cuántas fotos son.");
+    }
+    if (st.paso === "foto") {
+      if (!fid && !vid) {
+        const faltan = st.fotosTotal - st.fotos.length;
+        if (faltan > 0) return enviar(chat, `Envíeme las fotos (faltan <b>${faltan}</b>). Un vídeo-demo también sirve: reenvíelo y lo añado.`);
+      }
+      if (st.fotos.length >= st.fotosTotal) {
+        st.paso = "precio"; estadoSucio = true;
+        return enviar(chat, `📸 Listo, ${st.fotosTotal} foto(s) recibida(s).\n\n💲 ¿Precio que verá el cliente, en USD? (solo el número, ej. <b>450</b>)`);
+      }
+      return enviar(chat, `✅ Foto ${st.fotos.length}/${st.fotosTotal}. Siga enviando.`);
+    }
+    if (st.paso === "precio") {
+      const n = numero(txt);
+      if (!n || n <= 0) return enviar(chat, "Escriba solo el número, por ejemplo <b>450</b>.");
+      d.pv = Math.round(n * 100);
+      if (!d.g || !d.c) {
+        st.paso = "espera-cat"; estadoSucio = true;
+        return enviar(chat, "📂 No pude adivinar la categoría. Elija una:", botonesCategorias("ncat"));
+      }
+      return crearProducto(chat, st);
+    }
+    if (st.paso === "espera-cat") {
+      return enviar(chat, "Toque una categoría de las de arriba (o /cancelar).");
+    }
+  }
+
+  /* -------- modo LENTA: flujo clásico ampliado -------- */
+  if (st.paso === "l-nombre") {
     if (!txt) return enviar(chat, "Escriba el nombre del producto.");
-    d.n = txt; st.paso = "precio";
+    d.n = txt; st.paso = "l-precio";
     return enviar(chat, "💲 ¿Precio que verá el cliente, en USD? (solo el número, ej. <b>450</b>)");
   }
-  if (st.paso === "precio") {
+  if (st.paso === "l-precio") {
     const n = numero(txt);
     if (!n || n <= 0) return enviar(chat, "Escriba solo el número, por ejemplo <b>450</b>.");
-    d.pv = Math.round(n * 100); st.paso = "cat";
+    d.pv = Math.round(n * 100); st.paso = "l-cat";
     return enviar(chat, "📂 Elija la categoría:", botonesCategorias("ncat"));
   }
-  if (st.paso === "desc") {
+  if (st.paso === "l-desc") {
     if (!txt) return enviar(chat, "Escriba una descripción del producto.");
     d.dl = txt;
     d.dc = txt.length > 90 ? txt.slice(0, txt.lastIndexOf(" ", 88)) + "…" : txt;
-    st.paso = "venta";
+    st.paso = "l-venta";
     return enviar(chat, "💬 Texto de venta (por qué le conviene al cliente). Escríbalo, o toque <b>Hacerlo automático</b>.", teclado([[{ text: "Hacerlo automático", callback_data: "nauto" }]]));
   }
-  if (st.paso === "venta") {
+  if (st.paso === "l-venta") {
     if (!txt) return enviar(chat, "Escriba el texto de venta o toque «Hacerlo automático».");
-    d.v = txt; st.paso = "foto";
-    return enviar(chat, "🖼 Ahora envíeme la <b>foto</b> del producto.");
+    d.v = txt;
+    return preguntarFotos(chat, st);
+  }
+  if (st.paso === "fotos-cuantas") {
+    return enviar(chat, "Toque un botón de arriba para decirme cuántas fotos son.");
   }
   if (st.paso === "foto") {
-    const fid = msg.photo?.at(-1)?.file_id || (msg.document?.mime_type?.startsWith("image/") ? msg.document.file_id : null);
-    if (!fid) return enviar(chat, "Envíeme una <b>foto</b> del producto.");
-    const p = { s: slugDe(d.n), n: d.n, c: d.c, g: d.g, pv: d.pv, po: d.pv, e: "hay", dc: d.dc, dl: d.dl, sp: [], v: d.v };
-    p.f = await bajarFoto(fid, p.s);
-    db.CATALOGO.unshift(p);
-    marcar(`Nuevo: ${p.n}`);
-    delete estado.pend[chat]; estadoSucio = true;
-    await enviar(chat, "✅ Producto agregado. Aparecerá primero en el catálogo en 1–3 minutos.");
-    return mostrarFicha(chat, p);
+    if (!fid && !vid) {
+      const faltan = st.fotosTotal - st.fotos.length;
+      if (faltan > 0) return enviar(chat, `Envíeme las fotos (faltan <b>${faltan}</b>). Un vídeo-demo también sirve: reenvíelo y lo añado.`);
+    }
+    if (st.fotos.length >= st.fotosTotal) return crearProducto(chat, st);
+    return enviar(chat, `✅ Foto ${st.fotos.length}/${st.fotosTotal}. Siga enviando.`);
   }
+  return enviar(chat, "Algo se cruzó. /cancelar y empezamos de nuevo.", MENU);
 }
 
 // ---------- router ----------
@@ -305,8 +424,23 @@ async function onMensaje(msg) {
 }
 
 async function iniciarNuevo(chat) {
-  estado.pend[chat] = { tipo: "nuevo", paso: "nombre", datos: {} }; estadoSucio = true;
-  return enviar(chat, "➕ <b>Nuevo producto</b>\n\n¿Cómo se llama? (o /cancelar)");
+  estado.pend[chat] = { tipo: "nuevo", modo: null, paso: "modo", datos: {}, fotos: [], fotosTotal: 0, video: null }; estadoSucio = true;
+  return enviar(chat, "➕ <b>Nuevo producto</b>\n\n¿Cómo lo agregamos?", teclado([
+    [{ text: "⚡ Fast — reenvía y listo", callback_data: "nmodo:fast" }],
+    [{ text: "🐢 Completa — todo a mano", callback_data: "nmodo:lenta" }]
+  ]));
+}
+
+async function bajarVideo(fileId, slug) {
+  const f = await tg("getFile", { file_id: fileId });
+  if (!f.ok) throw new Error("No pude descargar el vídeo");
+  const r = await fetch(`${API}/file/bot${TOKEN}/${f.result.file_path}`);
+  const buf = Buffer.from(await r.arrayBuffer());
+  if (buf.length > 18 * 1024 * 1024) throw new Error("Vídeo demasiado grande (máx. ~18 MB)");
+  const ext = (f.result.file_path.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const nombre = `${slug}-video-${Date.now().toString(36)}.${ext || "mp4"}`;
+  fs.writeFileSync(path.join(DIR_FOTOS, nombre), buf);
+  return nombre;
 }
 
 async function buscar(chat, q) {
@@ -326,6 +460,31 @@ async function onBoton(q) {
 
   if (acc === "nada") return;
   if (acc === "nuevo") return iniciarNuevo(chat);
+  if (acc === "nmodo") {
+    const st = estado.pend[chat]; if (st?.tipo !== "nuevo" || st.paso !== "modo") return;
+    st.modo = a; estadoSucio = true;
+    if (a === "fast") {
+      st.paso = "entrada";
+      return enviar(chat, "⚡ <b>Modo fast</b>\n\nReenvíeme el mensaje del proveedor (texto y/o fotos). Yo busco el producto en la web, redacto la ficha y le pido precio y fotos. Si el nombre no sale del mensaje, se lo pregunto.\n\nAdelante (o /cancelar).");
+    }
+    st.paso = "l-nombre";
+    return enviar(chat, "🐢 <b>Modo completa</b>\n\n¿Cómo se llama el producto? (o /cancelar)");
+  }
+  if (acc === "nfoto") {
+    const st = estado.pend[chat]; if (st?.tipo !== "nuevo" || st.paso !== "fotos-cuantas") return;
+    st.fotosTotal = Math.min(6, Math.max(1, Number(a) || 1));
+    st.paso = "foto"; estadoSucio = true;
+    if (st.fotos.length >= st.fotosTotal) {
+      /* ya llegó todo en el reenvío */
+      if (st.modo === "fast") {
+        st.paso = "precio";
+        return enviar(chat, `📸 Ya tengo las ${st.fotosTotal} foto(s).\n\n💲 ¿Precio que verá el cliente, en USD? (solo el número, ej. <b>450</b>)`);
+      }
+      return crearProducto(chat, st);
+    }
+    const faltan = st.fotosTotal - st.fotos.length;
+    return enviar(chat, `🖼 Envíeme ${faltan === 1 ? "la foto" : `las <b>${faltan}</b> fotos`}${st.modo === "fast" ? "" : " del producto"}${st.video ? "" : ". Si tiene vídeo-demo, reenvíelo también."}`);
+  }
   if (acc === "buscar") return enviar(chat, "Escriba el nombre o una palabra del producto (ej. <i>nevera</i>).");
   if (acc === "cats") {
     const t = Object.entries(db.GRUPOS).map(([g, d]) => `<b>${esc(d.nombre)}</b>\n` + d.subs.map(s => `  · ${esc(s)} (${db.CATALOGO.filter(p => p.g === g && p.c === s).length})`).join("\n")).join("\n\n");
@@ -333,13 +492,23 @@ async function onBoton(q) {
   }
   if (acc === "ncat") {
     const st = estado.pend[chat]; if (st?.tipo !== "nuevo") return;
-    st.datos.g = a; st.datos.c = db.GRUPOS[a].subs[Number(b)]; st.paso = "desc"; estadoSucio = true;
+    st.datos.g = a; st.datos.c = db.GRUPOS[a].subs[Number(b)]; estadoSucio = true;
+    if (st.modo === "fast") {
+      if (st.paso === "espera-cat" && st.datos.pv) return crearProducto(chat, st);
+      return enviar(chat, `📂 ${esc(st.datos.c)}. Puede seguir.`);
+    }
+    st.paso = "l-desc";
     return enviar(chat, `📂 ${esc(st.datos.c)}\n\n📝 Escriba la descripción del producto (qué es, medidas, material, garantía…).`);
   }
   if (acc === "nauto") {
     const st = estado.pend[chat]; if (st?.tipo !== "nuevo") return;
-    st.datos.v = textoVentaAuto(st.datos); st.paso = "foto"; estadoSucio = true;
-    return enviar(chat, "🖼 Ahora envíeme la <b>foto</b> del producto.");
+    await tg("sendChatAction", { chat_id: chat, action: "typing" });
+    const h = await buscarEnLaWeb(`${st.datos.n} especificaciones`);
+    const f = generarFichaLocal(st.datos.n, h);
+    st.datos.v = f.v;
+    if (!st.datos.sp?.length) st.datos.sp = f.sp;
+    estadoSucio = true;
+    return preguntarFotos(chat, st);
   }
   if (!p) return enviar(chat, "Ese producto ya no existe.", MENU);
   if (acc === "ver") return mostrarFicha(chat, p);
@@ -394,6 +563,8 @@ function publicar() {
     if (sucio && process.env.GH_TOKEN && process.env.GITHUB_REPOSITORY) {
       execSync(`curl -s -X POST -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/$GITHUB_REPOSITORY/pages/builds >/dev/null`, { shell: "/bin/bash" });
     }
+    /* aviso opcional al WhatsApp del dueño (variable WHATSAPP_AVISO_URL) */
+    if (sucio) avisoWhatsApp(`Nexo web actualizada: ${msg}`);
   } catch (e) { console.log("git:", e.message); }
   sucio = estadoSucio = false;
 }
