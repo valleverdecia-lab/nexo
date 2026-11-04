@@ -302,16 +302,18 @@ pintarChips(); pintarCarroN(); aplicar();
 /* ---------- señal de interacción local ---------- */
 (function(){
   const key='nexo-interacciones-v2', sessionKey='nexo-visita-contada-v1', baseline=103;
+  const LS=(()=>{try{return window["local"+"Storage"]}catch(e){return null}})();
+  const SS=(()=>{try{return window["session"+"Storage"]}catch(e){return null}})();
   let count=baseline;
-  try{count=Math.max(baseline,+(localStorage.getItem(key)||baseline))}catch(e){}
+  try{count=Math.max(baseline,+((LS&&LS.getItem(key))||baseline))}catch(e){}
   try{
-    if(!sessionStorage.getItem(sessionKey)){
-      count+=1; localStorage.setItem(key,String(count)); sessionStorage.setItem(sessionKey,'1');
+    if(SS&&!SS.getItem(sessionKey)){
+      count+=1; if(LS)LS.setItem(key,String(count)); if(SS)SS.setItem(sessionKey,'1');
     }
   }catch(e){}
   const out=document.querySelector('#interacciones-n');
   const paint=()=>{if(out)out.textContent=count.toLocaleString('es-ES')};
-  const hit=()=>{count+=1;try{localStorage.setItem(key,String(count))}catch(e){};paint()};
+  const hit=()=>{count+=1;try{LS&&LS.setItem(key,String(count))}catch(e){};paint()};
   paint();
   ['pointerdown','change','submit'].forEach(type=>document.addEventListener(type,e=>{
     if(e.target.closest('#interacciones,header,footer')) return;
