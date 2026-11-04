@@ -1,0 +1,61 @@
+/* Nexo / Luxury editorial system — flat materials, strong hierarchy, restrained motion. */
+:root{
+  --bg:#080a0c;--fg:#f1f0eb;--mut:#a7aaa7;--mut2:#707571;--c:#75e4ff;--v:#8a86ff;
+  --surface:#111518;--surface-2:#171c1f;--line:#293135;--warm:#d5c3a0;--m:var(--s);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg)}
+.grain{opacity:.025;animation:none}
+/* Remove the old decorative layering; surfaces do the work. */
+.glass,.visual-card,.interacciones-card,.testimonial-carousel,.filtros{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--surface);box-shadow:none!important}
+.glass::before,.glow::before{display:none}
+header nav{padding:18px clamp(24px,5vw,72px);background:rgba(8,10,12,.94)!important;backdrop-filter:none!important}
+header.scr nav{background:rgba(8,10,12,.98)!important}
+header nav .logo{position:static;transform:none;font-size:17px;letter-spacing:-.03em}
+.logo i{width:8px;height:8px;box-shadow:none}
+.nav-der{gap:26px}.cta{border-radius:4px;border:1px solid var(--line);padding:9px 14px;color:var(--fg)}
+.cta:hover{background:var(--c);color:var(--bg);border-color:var(--c)}
+/* First screen: the catalog promise, not a second splash screen. */
+#inicio{min-height:86svh;padding:120px clamp(24px,7vw,112px) 72px;align-items:center;background:#080a0c;border:0!important;border-radius:0!important;box-shadow:none!important}
+#inicio::before{display:none}.orb{display:none}
+#esfera{opacity:.55;left:auto;right:-8%;top:12%;width:62%;height:74%;pointer-events:none;mix-blend-mode:screen}
+.hero-cont{max-width:720px;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.kicker{font-family:var(--s);font-size:13px;letter-spacing:.04em;text-transform:none;color:var(--c);margin-bottom:28px}
+h1{font-size:clamp(58px,10vw,148px);line-height:.84;letter-spacing:-.075em;max-width:780px}
+h1 .ember{color:var(--c);background:none;-webkit-text-fill-color:initial}
+.sub{margin-top:34px;max-width:490px}.sub p{font-size:17px;line-height:1.5;color:var(--mut)}
+#inicio::after{content:"Explora el catálogo";position:absolute;left:clamp(24px,7vw,112px);bottom:28px;font:12px var(--s);color:var(--mut2);letter-spacing:.04em}
+#inicio::after{inset:auto auto 28px clamp(24px,7vw,112px);width:auto;height:auto;border:0;border-radius:0;background:none;box-shadow:none;transform:none;pointer-events:none}
+#inicio .hero-cont{padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.scroll{right:clamp(24px,7vw,112px);left:auto;transform:none;bottom:28px;color:var(--c);font-family:var(--s);letter-spacing:.04em;text-transform:none}.mouse{display:none}
+/* Cut the duplicated introduction into a proof-led editorial block. */
+#presentacion{padding:88px clamp(24px,7vw,112px);border-block:1px solid var(--line);background:#0d1113}
+.presentacion-grid{max-width:1240px;margin:auto;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);gap:clamp(48px,10vw,160px);align-items:center}
+.presentacion-kicker{font-family:var(--s);font-size:13px;letter-spacing:.04em;text-transform:none;color:var(--c)}
+.presentacion h2{font-size:clamp(42px,6vw,86px);line-height:.9;letter-spacing:-.06em}.presentacion h2 em{color:var(--fg)}
+.presentacion-lead{font-size:20px;line-height:1.35;color:var(--fg);max-width:590px;margin-top:28px}.presentacion-body{color:var(--mut);max-width:590px;line-height:1.6;margin-top:16px}
+.presentacion-pilares{gap:0;margin-top:34px;border-top:1px solid var(--line);max-width:700px}.presentacion-pilares>div{padding:18px 22px 0 0;border-top:0}.presentacion-pilares b{display:none}.presentacion-pilares span{font:22px var(--d)}.presentacion-pilares small{color:var(--mut);font-size:13px}
+.presentacion-cta{margin-top:34px;padding:0;border:0;background:none;width:auto;box-shadow:none}.presentacion-cta p{font-family:var(--s);font-size:13px;letter-spacing:0;text-transform:none;color:var(--mut);margin-bottom:8px}.presentacion-wa{color:var(--c);font-size:16px;border-bottom:1px solid var(--c);padding-bottom:4px}
+.presentacion-visual{min-height:360px;transform:none;animation:none}.visual-ring{border-radius:50%;border:1px solid var(--c);opacity:.45}.ring-a{width:78%;animation:none}.ring-b{width:54%;border-color:var(--v);animation:none}.visual-card{border-radius:2px;border:1px solid var(--line);background:var(--surface-2);padding:24px}.card-back{opacity:.7;transform:translate(34px,-34px)}.card-front{transform:translate(-20px,34px);border-color:var(--c)}.visual-card strong{font-size:52px}
+.mq{padding:14px 0;border-block:1px solid var(--line);background:#080a0c}.mq div{animation-duration:60s}.mq span{font:italic clamp(24px,3.8vw,48px) var(--d);color:var(--mut)}.mq span::after{color:var(--c)}
+/* Catalog is the commercial core. */
+#catalogo{padding:112px clamp(24px,7vw,112px);background:#080a0c}.lbl{font-family:var(--s);font-size:13px;letter-spacing:.04em;text-transform:none;color:var(--mut);margin-bottom:28px}.lbl b{display:none}.lbl i{width:24px;background:var(--c)}
+#catalogo h2.d{font-size:clamp(44px,7vw,102px);letter-spacing:-.07em}.sec-nota{font-size:16px;line-height:1.5;color:var(--mut);max-width:520px}
+.filtros{border:1px solid var(--line);border-radius:2px;padding:20px;margin-top:42px}.tabs{gap:22px}.tab{border-radius:0;padding:10px 0;color:var(--mut);opacity:1}.tab.on{background:none;color:var(--fg)}.tab.on::after{left:0;right:0;bottom:0;background:var(--c);box-shadow:none}.chips{gap:6px}.chip{border-color:var(--line);border-radius:2px;padding:7px 11px}.chip.on{background:var(--c);color:var(--bg);border-color:var(--c)}#buscar,#orden{border-radius:2px;border-color:var(--line);background:#0b0e10}
+.vitrina{gap:1px;margin-inline:0;padding-inline:0;background:var(--line);border:1px solid var(--line)}
+.pieza{border-radius:0;border:0;padding:18px;background:#0b0e10;transition:background .35s,transform .35s;opacity:0}.pieza-oro{background:#0b0e10;border:0;box-shadow:none}.pieza-oro::before{display:none}.pieza:hover{background:#151b1e;transform:none}.pieza-nombre{font-size:23px}.pieza:hover .pieza-nombre{color:var(--fg)}.pieza-marco{border-radius:0;background:#101416}.pieza-marco img{mix-blend-mode:normal}.pieza-precio{color:var(--fg);font-size:14px}.pieza-cat{color:var(--mut2)}.pieza-add{border-radius:2px;border-color:var(--c);color:var(--c);background:#0b0e10;backdrop-filter:none}.pieza-add:hover,.pieza-add.ok{background:var(--c);color:var(--bg)}
+.big,.big-mas{border-radius:2px;background:var(--c);color:var(--bg);box-shadow:none;padding:15px 22px}.big:hover,.big-mas:hover{transform:none;background:#b8efff}
+/* New trust section: factual answers before social proof. */
+#como-funciona{padding:110px clamp(24px,7vw,112px);background:#f1f0eb;color:#0b0e10}.how-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(40px,9vw,140px);max-width:1240px;margin:auto}.how-title{font:clamp(48px,7vw,94px)/.88 var(--d);letter-spacing:-.07em;max-width:620px}.how-copy{font-size:17px;line-height:1.55;color:#59605e;max-width:510px;margin-top:22px}.how-list{border-top:1px solid #c5c6c0;margin-top:6px}.how-step{display:grid;grid-template-columns:34px 1fr;gap:18px;padding:22px 0;border-bottom:1px solid #c5c6c0}.how-step b{font:14px var(--s);color:#147d93}.how-step strong{display:block;font-size:19px;font-weight:500}.how-step span{display:block;color:#59605e;margin-top:6px;line-height:1.45}.how-note{margin-top:22px;font-size:13px;color:#59605e}
+#resenas{padding-top:112px}.testimonial-carousel{border-radius:0;border:1px solid var(--line);background:#0d1113}.resenas-heading h2{letter-spacing:-.06em}.resena-texto{font-size:24px}.resena-est{color:var(--c)}.resena-cta a{color:var(--c)}
+#contacto{background:#0d1113;border-top:1px solid var(--line)}.oferta-panel{border-color:var(--line)!important;border-radius:0!important;background:#111518!important}.oferta-panel.is-active{background:var(--c)!important;color:var(--bg)}.oferta-panel.is-active small,.oferta-panel.is-active i{color:var(--bg)}.oferta-index{display:none}
+#interacciones{display:none}
+footer{border-color:var(--line);padding:28px clamp(24px,7vw,112px)}.f-cats a{color:var(--mut)}
+#wa-flotante{border-radius:2px;box-shadow:none}#carro-btn,#subir{border-radius:2px;box-shadow:none;background:var(--surface);backdrop-filter:none}
+#modal{border-radius:2px;background:#0d1113;border:1px solid var(--line)}.modal-foto{border-radius:0;background:#111518;backdrop-filter:none}.m-venta{border-radius:0;background:#111518;backdrop-filter:none;border-color:var(--line)}
+@media(max-width:800px){
+  #inicio{min-height:78svh;padding-top:120px;padding-bottom:72px}.hero-cont{max-width:100%}#esfera{right:-22%;width:100%;height:58%;top:24%;opacity:.35}h1{font-size:clamp(58px,17vw,100px)}#inicio::after{bottom:24px}.scroll{bottom:24px}
+  .presentacion-grid,.how-grid{grid-template-columns:1fr}.presentacion-visual{min-height:260px;order:-1}.presentacion{padding-block:72px}.presentacion-pilares{grid-template-columns:1fr}.presentacion-pilares>div{padding-top:14px;border-top:1px solid var(--line)}
+  #catalogo{padding-inline:16px}.vitrina{grid-template-columns:1fr 1fr;margin-inline:0}.pieza{padding:11px}.pieza-nombre{font-size:19px}.pieza-pie{display:block}.pieza-precio{display:block;margin-top:7px}.pieza-add{opacity:1;transform:none;bottom:8px;left:8px}
+  .how-grid{gap:42px}.how-title{font-size:62px}.how-list{margin-top:18px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
