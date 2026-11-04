@@ -5,6 +5,7 @@ const WA="5356865093";
 const TOTAL=CATALOGO.length;
 const fmt=c=>(c/100).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2})+" USD";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>"&#"+c.charCodeAt(0)+";");
+const norm=s=>String(s??"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 
 /* grupos: g -> {nombre, subs:[nombres]} */
 const GRUPO_NOMBRE={...Object.fromEntries(Object.entries(GRUPOS).map(([g,d])=>[g,d.nombre]))};
@@ -68,7 +69,7 @@ addEventListener("keydown",e=>{if(e.key==="Escape"&&!carroEl.hidden)abrirCarro(f
 function aplicar(){
   lista=CATALOGO.filter(p=>
     (g===""||p.g===g) && (sub===""||p.c===sub) &&
-    (!q||(p.n+" "+p.c+" "+p.dc).toLowerCase().includes(q))
+    (!q||norm(p.n+" "+p.c+" "+p.dc).includes(q))
   );
   if(orden==="asc") lista.sort((a,b)=>a.pv-b.pv);
   else if(orden==="desc") lista.sort((a,b)=>b.pv-a.pv);
@@ -132,7 +133,7 @@ $("#chips").addEventListener("click",e=>{
   $$("#chips .chip").forEach(x=>x.classList.toggle("on",x===c));
   sub=c.dataset.sub; aplicar();
 });
-let tq; $("#buscar").addEventListener("input",e=>{clearTimeout(tq);tq=setTimeout(()=>{q=e.target.value.trim().toLowerCase();aplicar()},180)});
+let tq; $("#buscar").addEventListener("input",e=>{clearTimeout(tq);tq=setTimeout(()=>{q=norm(e.target.value.trim());aplicar()},180)});
 $("#orden").addEventListener("change",e=>{orden=e.target.value;aplicar()});
 
 /* mostrar más */
