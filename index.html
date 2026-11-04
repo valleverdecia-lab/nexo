@@ -12,6 +12,8 @@
 <link rel="stylesheet" href="style.css?v=4">
 <link rel="stylesheet" href="editorial-redesign.css?v=1">
 <link rel="stylesheet" href="interaction-effects.css?v=1">
+<link rel="stylesheet" href="product-flow.css?v=1">
+<link rel="stylesheet" href="sphere-touch.css?v=1">
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
@@ -204,6 +206,11 @@
         <p id="m-venta"></p>
       </div>
       <dl class="especificaciones" id="m-specs"></dl>
+      <div class="producto-nav" aria-label="Navegar entre productos">
+        <button type="button" id="m-prev" class="producto-nav-btn" aria-label="Producto anterior">← <span>Anterior</span></button>
+        <span id="m-pos" class="m producto-nav-pos"></span>
+        <button type="button" id="m-next" class="producto-nav-btn" aria-label="Producto siguiente"><span>Siguiente</span> →</button>
+      </div>
       <div class="modal-acciones">
         <button class="big" id="m-add">Añadir al carrito</button>
         <a class="btn-linea" id="m-wa" href="#" target="_blank" rel="noopener">Preguntar por WhatsApp</a>

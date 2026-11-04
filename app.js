@@ -156,6 +156,12 @@ function abrir(id){
   $("#m-specs").innerHTML=(p.sp||[]).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
   $("#m-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, me interesa: ${p.n} — ${fmt(p.pv)}`)}`;
   const b=$("#m-add"); b.textContent="Añadir al carrito"; b.disabled=false;
+  const position=lista.findIndex(item=>item.s===id);
+  const prev=$("#m-prev"), next=$("#m-next"), pos=$("#m-pos");
+  prev.disabled=position<=0; next.disabled=position<0||position>=lista.length-1;
+  prev.dataset.product=position>0?lista[position-1].s:"";
+  next.dataset.product=position>=0&&position<lista.length-1?lista[position+1].s:"";
+  pos.textContent=position>=0?`${position+1} / ${lista.length}`:"";
   modal.showModal(); document.body.style.overflow="hidden";
 }
 $("#vitrina").addEventListener("click",e=>{
@@ -175,6 +181,8 @@ $("#m-add").addEventListener("click",()=>{
   const b=$("#m-add"); b.textContent="Añadido ✓"; b.disabled=true;
   setTimeout(()=>{b.textContent="Añadir al carrito";b.disabled=false},1400);
 });
+$("#m-prev").addEventListener("click",e=>{if(e.currentTarget.dataset.product)abrir(e.currentTarget.dataset.product)});
+$("#m-next").addEventListener("click",e=>{if(e.currentTarget.dataset.product)abrir(e.currentTarget.dataset.product)});
 function cerrarModal(){modal.close()}
 $("#cerrar").addEventListener("click",cerrarModal);
 modal.addEventListener("click",e=>{if(e.target===modal)cerrarModal()});

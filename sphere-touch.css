@@ -1,0 +1,3 @@
+/* The particle field is a focused object, not a full-hero touch surface. */
+#esfera{left:auto;right:3%;top:16%;width:min(47vw,620px);height:min(58vh,520px);z-index:3}
+@media(max-width:759px){#esfera{right:-8%;top:18%;width:72vw;height:42vh}}

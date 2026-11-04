@@ -105,7 +105,7 @@
   }
 
   function resize() {
-    const rect = hero.getBoundingClientRect();
+    const rect = canvas.getBoundingClientRect();
     dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
@@ -170,7 +170,7 @@
   }
 
   function draw() {
-    const rect = hero.getBoundingClientRect();
+    const rect = canvas.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
     ctx.clearRect(0, 0, width, height);
@@ -242,13 +242,16 @@
       else { dot.x = dot.hx; dot.y = dot.hy; dot.vx = 0; dot.vy = 0; }
     }
     draw();
-    if (busy || !reduced) run();
+    if (busy) run();
     else running = false;
   }
 
-  canvas.addEventListener('pointermove', setPointer, { passive: true });
+  canvas.addEventListener('pointermove', event => { if (pointer.active) setPointer(event); }, { passive: true });
   canvas.addEventListener('pointerleave', () => { pointer.active = false; run(); }, { passive: true });
+  canvas.addEventListener('pointerup', () => { pointer.active = false; run(); }, { passive: true });
+  canvas.addEventListener('pointercancel', () => { pointer.active = false; run(); }, { passive: true });
   canvas.addEventListener('pointerdown', event => {
+    canvas.setPointerCapture?.(event.pointerId);
     const point = localPoint(event);
     setPointer(event);
     if (!reduced) shockwave(point);
