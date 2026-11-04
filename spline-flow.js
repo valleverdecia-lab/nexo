@@ -6,7 +6,7 @@
   const ctx = canvas.getContext('2d', { alpha: true });
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const TAU = Math.PI * 2;
-  const streams = Array.from({ length: 34 }, (_, i) => ({
+  const streams = Array.from({ length: 24 }, (_, i) => ({
     side: i % 2 ? 1 : -1,
     lane: i,
     phase: Math.random() * TAU,
@@ -22,7 +22,7 @@
     const box = section.getBoundingClientRect();
     width = Math.max(1, box.width); height = Math.max(1, box.height);
     /* A long canvas is expensive at 2x DPR. 1.25 keeps the lines crisp and scroll-friendly. */
-    dpr = Math.min(1.25, devicePixelRatio || 1);
+    dpr = Math.min(1, devicePixelRatio || 1);
     canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
     canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -75,7 +75,7 @@
     drawDot(centerX,centerY,3.1+Math.sin(time*.003)*1.1,'rgba(178,240,255,ALPHA)',.62+energy*.18);
     scrollEnergy *= .94;
   }
-  function frame(time) { raf=0; if(!visible)return; const elapsed=time-last; if(elapsed>28 || scrollEnergy>.03){draw(time);last=time;} if(!reduced)request(); }
+  function frame(time) { raf=0; if(!visible)return; const elapsed=time-last; if(elapsed>46 || scrollEnergy>.03){draw(time);last=time;} if(!reduced)request(); }
   new ResizeObserver(resize).observe(section);
   new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible){resize();request()}}).observe(section);
   addEventListener('scroll',scrollTick,{passive:true});

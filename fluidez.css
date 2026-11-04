@@ -1,0 +1,9 @@
+/* Fluidez: preserve the glass language with cheaper compositing. */
+.pieza{backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.filtros{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.pieza-add{backdrop-filter:none;-webkit-backdrop-filter:none}
+.visual-card,.hero-cont{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+@media(max-width:700px){
+  .pieza,.filtros,.visual-card,.hero-cont{backdrop-filter:none;-webkit-backdrop-filter:none}
+  .grain{animation:none!important}
+}

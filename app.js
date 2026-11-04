@@ -285,12 +285,12 @@ const ro=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.targ
 /* cursor custom (escritorio) */
 if(matchMedia('(hover:hover) and (pointer:fine)').matches){
   document.documentElement.classList.add("hc");
-  let mx=-99,my=-99,rx=-99,ry=-99;
-  addEventListener("pointermove",e=>{mx=e.clientX;my=e.clientY;$("#ring").classList.toggle("h",!!e.target.closest("a,button,input,select,.pieza"))});
-  (function loop(){rx+=(mx-rx)*.2;ry+=(my-ry)*.2;
-    $("#cur").style.transform=`translate(${mx}px,${my}px)`;
-    $("#ring").style.transform=`translate(${rx}px,${ry}px)`;
-    requestAnimationFrame(loop)})();
+  const cur=$("#cur"),ring=$("#ring");
+  addEventListener("pointermove",e=>{
+    cur.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;
+    ring.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;
+    ring.classList.toggle("h",!!e.target.closest("a,button,input,select,.pieza"));
+  },{passive:true});
 }
 
 /* intro: reveal del titular */
