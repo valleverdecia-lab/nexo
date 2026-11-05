@@ -179,7 +179,7 @@ const modal=$("#modal");
 let abierto="";
 function abrir(id){
   const p=porId[id]; if(!p)return;
-  abierto=id;
+  abierto=id; irASugerencias=false;
   const fotos=(p.fs&&p.fs.length?p.fs:(p.f?[p.f]:[p.s+".webp"]));
   $("#m-img").src=`fotos/${fotos[0]}`; $("#m-img").alt=p.n;
   /* galería de varias fotos */
@@ -237,15 +237,25 @@ $("#m-galeria")?.addEventListener("click",e=>{
 $("#m-add").addEventListener("click",()=>{
   if(!abierto)return;
   addCarro(abierto);
+  irASugerencias=true;
   const b=$("#m-add"); b.textContent="Añadido ✓"; b.disabled=true;
   setTimeout(()=>{b.textContent="Añadir al carrito";b.disabled=false},1400);
 });
 $("#m-prev").addEventListener("click",e=>{if(e.currentTarget.dataset.product)abrir(e.currentTarget.dataset.product)});
 $("#m-next").addEventListener("click",e=>{if(e.currentTarget.dataset.product)abrir(e.currentTarget.dataset.product)});
+let irASugerencias=false;
 function cerrarModal(){modal.close()}
 $("#cerrar").addEventListener("click",cerrarModal);
 modal.addEventListener("click",e=>{if(e.target===modal)cerrarModal()});
-modal.addEventListener("close",()=>{document.body.style.overflow=""});
+modal.addEventListener("close",()=>{
+  document.body.style.overflow="";
+  /* tras añadir al carrito, llevamos suavemente a las sugerencias */
+  if(irASugerencias){
+    irASugerencias=false;
+    const z=$("#sugerencias");
+    if(z&&!z.hidden)setTimeout(()=>z.scrollIntoView({block:"center",behavior:reduce?"auto":"smooth"}),120);
+  }
+});
 
 /* ---------- testimonios ---------- */
 const RESENAS=[
