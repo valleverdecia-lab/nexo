@@ -26,8 +26,8 @@ try{carro=LS?JSON.parse(LS.getItem("nexo-carro")||"{}")||{}:{}}catch(e){}
 const guardarCarro=()=>{try{LS&&LS.setItem("nexo-carro",JSON.stringify(carro))}catch(e){}};
 const nCarro=()=>Object.values(carro).reduce((a,b)=>a+b,0);
 function pintarCarroN(){const n=nCarro(),el=$("#carro-n");el.hidden=!n;el.textContent=n}
-function addCarro(id){carro[id]=(carro[id]||0)+1;guardarCarro();pintarCarroN();pintarCarro()}
-function delCarro(id){delete carro[id];guardarCarro();pintarCarroN();pintarCarro()}
+function addCarro(id){carro[id]=(carro[id]||0)+1;guardarCarro();pintarCarroN();pintarCarro();pintarSugerencias(id)}
+function delCarro(id){delete carro[id];guardarCarro();pintarCarroN();pintarCarro();if(!nCarro()){const z=$("#sugerencias");if(z)z.hidden=true}}
 function setCarro(id,cant){if(cant<=0)delCarro(id);else{carro[id]=cant;guardarCarro();pintarCarroN();pintarCarro()}}
 function totalCarro(){return Object.keys(carro).reduce((a,id)=>{const p=porId[id];return p?a+carro[id]*p.pv:0},0)}
 function pintarCarro(){
@@ -54,6 +54,35 @@ function pintarCarro(){
   const msg=`Hola, quiero hacer un pedido:\n${lineas.join("\n")}\nTotal: ${fmt(tot)}`;
   $("#carro-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
 }
+/* sugerencias tras añadir al carrito */
+function pintarSugerencias(ultimoId){
+  const zona=$("#sugerencias"); if(!zona)return;
+  const ids=Object.keys(carro).filter(id=>porId[id]);
+  if(!ids.length){zona.hidden=true;return}
+  const base=porId[ultimoId]&&porId[ultimoId].s===ultimoId?porId[ultimoId]:porId[ids[0]];
+  const enCarro=new Set(ids);
+  const pool=CATALOGO.filter(p=>p.s!==base.s&&!enCarro.has(p.s));
+  const mismoSub=pool.filter(p=>p.c===base.c&&p.g===base.g);
+  const mismoGrupo=pool.filter(p=>p.g===base.g&&p.c!==base.c);
+  const resto=pool.filter(p=>p.g!==base.g);
+  const elegidos=[];
+  for(const arr of [mismoSub,mismoGrupo,resto]){
+    for(const p of arr){if(elegidos.length<4&&!elegidos.includes(p))elegidos.push(p)}
+    if(elegidos.length>=4)break;
+  }
+  if(!elegidos.length){zona.hidden=true;return}
+  $("#sug-grid").innerHTML=elegidos.map(p=>{
+    const foto=(p.fs&&p.fs[0])||p.f||p.s+".webp";
+    return `<button class="sug-card" data-sug="${p.s}">
+      <img src="fotos/${foto}" alt="${esc(p.n)}" loading="lazy" decoding="async">
+      <span class="sug-nombre">${esc(p.n)}</span>
+      <span class="sug-precio mono">${fmt(p.pv)}</span>
+    </button>`}).join("");
+  zona.hidden=false;
+}
+$("#sug-grid")?.addEventListener("click",e=>{
+  const c=e.target.closest("[data-sug]"); if(c)abrir(c.dataset.sug);
+});
 const carroEl=$("#carro"), carroFondo=$("#carro-fondo");
 function abrirCarro(o){carroEl.hidden=!o;carroFondo.hidden=!o;document.body.style.overflow=o?"hidden":""}
 $("#carro-btn").addEventListener("click",()=>{pintarCarro();abrirCarro(true)});
@@ -323,7 +352,7 @@ if(matchMedia('(hover:hover) and (pointer:fine)').matches){
 /* intro: reveal del titular */
 addEventListener("load",()=>setTimeout(()=>document.body.classList.add("go"),reduce?0:300));
 
-pintarChips(); pintarCarroN(); aplicar();
+pintarChips(); pintarCarroN(); aplicar(); if(nCarro())pintarSugerencias(Object.keys(carro).find(id=>porId[id]));
 
 /* ---------- señal de interacción local ---------- */
 (function(){
