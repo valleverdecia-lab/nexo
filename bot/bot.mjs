@@ -163,6 +163,7 @@ const AYUDA = `<b>Panel de Nexo</b>
 • <b>Agregar producto</b>: elija <b>⚡ Fast</b> (reenvía el mensaje del proveedor; yo busco el producto en la web, redacto la ficha y solo le pregunto fotos y precio) o <b>🐢 Completa</b> (todo a mano, paso a paso).
 • Puede subir <b>varias fotos</b> (hasta 6) e incluso un <b>vídeo-demo</b> (hasta ~18 MB).
 • <b>Editar</b>: escriba cualquier palabra (ej. <i>sillón</i>) y toque el producto. Puede cambiar precio, nombre, descripciones, fotos, categoría, disponibilidad o borrarlo.
+• <b>Categorías</b>: desde «📋 Ver categorías» puede <b>añadir o borrar subcategorías y grupos</b> enteros. Si borra una subcategoría con productos, estos pasan a «Otros».
 • /cancelar detiene lo que esté haciendo.
 
 Los cambios aparecen en la web en 1–3 minutos.`;
@@ -209,6 +210,18 @@ function botonesCategorias(prefijo) {
   }
   return teclado(filas);
 }
+function botonesGrupos(prefijo) {
+  return teclado(Object.entries(db.GRUPOS).map(([g, d]) => [{ text: d.nombre, callback_data: `${prefijo}:${g}` }]));
+}
+function textoCategorias() {
+  return Object.entries(db.GRUPOS).map(([g, d]) => `<b>${esc(d.nombre)}</b>\n` + d.subs.map(s => `  · ${esc(s)} (${db.CATALOGO.filter(p => p.g === g && p.c === s).length})`).join("\n")).join("\n\n");
+}
+const MENU_CATS = () => teclado([
+  [{ text: "➕ Añadir subcategoría", callback_data: "cadd" }],
+  [{ text: "🗑 Borrar subcategoría", callback_data: "cdel" }],
+  [{ text: "🗂 Crear grupo", callback_data: "gadd" }, { text: "🗂 Borrar grupo", callback_data: "gdel" }],
+  [{ text: "◀ Volver al menú", callback_data: "menu" }]
+]);
 
 // ---------- edición ----------
 const CAMPOS = { pv: "precio", n: "nombre", dc: "descripción corta", dl: "descripción larga", v: "texto de venta", sp: "especificaciones", foto: "foto" };
@@ -392,6 +405,33 @@ async function pasoNuevo(chat, msg) {
   return enviar(chat, "Algo se cruzó. /cancelar y empezamos de nuevo.", MENU);
 }
 
+// ---------- gestión de categorías ----------
+function pasoCat(chat, msg) {
+  const st = estado.pend[chat];
+  const txt = (msg.text || "").trim();
+  if (st.paso === "addsub") {
+    const nombre = txt.replace(/\s+/g, " ").slice(0, 40);
+    if (!nombre) return enviar(chat, "Escriba el nombre de la subcategoría (o /cancelar).");
+    const d = db.GRUPOS[st.g];
+    if (d.subs.some(s => norm(s) === norm(nombre))) return enviar(chat, `«${esc(nombre)}» ya existe en ${esc(d.nombre)}. Otro nombre (o /cancelar).`);
+    d.subs.push(nombre);
+    marcar(`Nueva subcategoría: ${d.nombre} › ${nombre}`);
+    delete estado.pend[chat]; estadoSucio = true;
+    return enviar(chat, `✅ Añadida <b>${esc(nombre)}</b> en ${esc(d.nombre)}. Ya puede usarla al agregar productos. La web se actualiza en 1–3 minutos.`, MENU_CATS());
+  }
+  if (st.paso === "addgrp") {
+    const nombre = txt.replace(/\s+/g, " ").slice(0, 40);
+    if (!nombre) return enviar(chat, "Escriba el nombre del grupo (o /cancelar).");
+    let key = norm(nombre).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "grupo";
+    while (db.GRUPOS[key]) key += "-2";
+    db.GRUPOS[key] = { nombre, subs: ["Otros"] };
+    marcar(`Nuevo grupo: ${nombre}`);
+    delete estado.pend[chat]; estadoSucio = true;
+    return enviar(chat, `✅ Grupo <b>${esc(nombre)}</b> creado con la subcategoría «Otros». Añada más subcategorías cuando quiera. La web se actualiza en 1–3 minutos.`, MENU_CATS());
+  }
+  return enviar(chat, "Toque una opción del menú de categorías (o /cancelar).", MENU_CATS());
+}
+
 // ---------- router ----------
 async function onMensaje(msg) {
   const chat = msg.chat.id;
@@ -414,6 +454,7 @@ async function onMensaje(msg) {
 
   const st = estado.pend[chat];
   if (st?.tipo === "nuevo") return pasoNuevo(chat, msg);
+  if (st?.tipo === "cat") return pasoCat(chat, msg);
   if (st?.tipo === "editar") {
     const p = buscarP(st.s);
     if (!p) { delete estado.pend[chat]; return enviar(chat, "Ese producto ya no existe.", MENU); }
@@ -487,8 +528,69 @@ async function onBoton(q) {
   }
   if (acc === "buscar") return enviar(chat, "Escriba el nombre o una palabra del producto (ej. <i>nevera</i>).");
   if (acc === "cats") {
-    const t = Object.entries(db.GRUPOS).map(([g, d]) => `<b>${esc(d.nombre)}</b>\n` + d.subs.map(s => `  · ${esc(s)} (${db.CATALOGO.filter(p => p.g === g && p.c === s).length})`).join("\n")).join("\n\n");
-    return enviar(chat, t, MENU);
+    return enviar(chat, `🗂 <b>Categorías</b>\n\n${textoCategorias()}\n\n¿Qué quiere hacer?`, MENU_CATS());
+  }
+  if (acc === "menu") return enviar(chat, AYUDA, MENU);
+  /* --- gestión de categorías --- */
+  if (acc === "cadd" && !a) {
+    estado.pend[chat] = { tipo: "cat", paso: "addsub-g" }; estadoSucio = true;
+    return enviar(chat, "➕ ¿A qué grupo añado la subcategoría?", botonesGrupos("cadd"));
+  }
+  if (acc === "cadd" && a && db.GRUPOS[a]) {
+    const st = estado.pend[chat]; if (st?.tipo !== "cat") return;
+    st.paso = "addsub"; st.g = a; estadoSucio = true;
+    return enviar(chat, `Escriba el nombre de la nueva subcategoría para <b>${esc(db.GRUPOS[a].nombre)}</b> (o /cancelar):`);
+  }
+  if (acc === "cdel" && !a) {
+    estado.pend[chat] = { tipo: "cat", paso: "delsub-g" }; estadoSucio = true;
+    return enviar(chat, "🗑 ¿De qué grupo borro una subcategoría?", botonesGrupos("cdel"));
+  }
+  if (acc === "cdel" && a && db.GRUPOS[a]) {
+    const d = db.GRUPOS[a];
+    return enviar(chat, `🗑 Subcategoría de <b>${esc(d.nombre)}</b> que quiero borrar:`, teclado(
+      d.subs.map(s => [{ text: `${s} (${db.CATALOGO.filter(p => p.g === a && p.c === s).length})`, callback_data: `cdels:${a}:${d.subs.indexOf(s)}` }]).concat([[{ text: "◀ Atrás", callback_data: "cats" }]])
+    ));
+  }
+  if (acc === "cdels" && db.GRUPOS[a]) {
+    const d = db.GRUPOS[a], sub = d.subs[Number(b)];
+    if (!sub) return enviar(chat, "Esa subcategoría ya no existe.", MENU_CATS());
+    const n = db.CATALOGO.filter(p => p.g === a && p.c === sub).length;
+    const tieneOtros = d.subs.includes("Otros");
+    if (n > 0 && !tieneOtros) return enviar(chat, `⚠️ «${esc(sub)}» tiene <b>${n}</b> producto(s) y el grupo no tiene «Otros» donde moverlos. Cree primero la subcategoría «Otros» o mueva los productos.`, MENU_CATS());
+    return enviar(chat, n > 0
+      ? `¿Borrar «${esc(sub)}» y mover sus <b>${n}</b> producto(s) a «Otros»?`
+      : `¿Borrar «${esc(sub)}»? No tiene productos.`,
+      teclado([[{ text: "Sí, borrar", callback_data: `cdelok:${a}:${b}` }, { text: "No", callback_data: "cats" }]]));
+  }
+  if (acc === "cdelok" && db.GRUPOS[a]) {
+    const d = db.GRUPOS[a], i = Number(b), sub = d.subs[i];
+    if (!sub) return enviar(chat, "Esa subcategoría ya no existe.", MENU_CATS());
+    if (d.subs.length <= 1) return enviar(chat, "⚠️ Un grupo no puede quedarse sin subcategorías. Añada otra primero.", MENU_CATS());
+    let movidos = 0;
+    if (d.subs.includes("Otros")) for (const p of db.CATALOGO) if (p.g === a && p.c === sub) { p.c = "Otros"; movidos++; }
+    d.subs.splice(i, 1);
+    marcar(`Borrada subcategoría: ${d.nombre} › ${sub}${movidos ? ` (${movidos} → Otros)` : ""}`);
+    delete estado.pend[chat]; estadoSucio = true;
+    return enviar(chat, `✅ Borrada <b>${esc(sub)}</b>${movidos ? `, ${movidos} producto(s) movidos a «Otros»` : ""}.\n\n${textoCategorias()}`, MENU_CATS());
+  }
+  if (acc === "gadd") {
+    estado.pend[chat] = { tipo: "cat", paso: "addgrp" }; estadoSucio = true;
+    return enviar(chat, "🗂 Escriba el nombre del grupo nuevo (ej. <b>Tecnología</b>). Le creo dentro la subcategoría «Otros» (o /cancelar):");
+  }
+  if (acc === "gdel" && !a) return enviar(chat, "🗂 Grupo que quiero borrar (solo si no tiene productos):", botonesGrupos("gdel"));
+  if (acc === "gdel" && a && db.GRUPOS[a]) {
+    const n = db.CATALOGO.filter(p => p.g === a).length;
+    if (n > 0) return enviar(chat, `⚠️ <b>${esc(db.GRUPOS[a].nombre)}</b> tiene <b>${n}</b> producto(s). Mueva o borre los productos primero.`, MENU_CATS());
+    if (Object.keys(db.GRUPOS).length <= 1) return enviar(chat, "⚠️ Debe existir al menos un grupo.", MENU_CATS());
+    return enviar(chat, `¿Borrar el grupo <b>${esc(db.GRUPOS[a].nombre)}</b> y todas sus subcategorías? No tiene productos.`,
+      teclado([[{ text: "Sí, borrar", callback_data: `gdelok:${a}` }, { text: "No", callback_data: "cats" }]]));
+  }
+  if (acc === "gdelok" && db.GRUPOS[a]) {
+    const nombre = db.GRUPOS[a].nombre;
+    delete db.GRUPOS[a];
+    marcar(`Borrado grupo: ${nombre}`);
+    delete estado.pend[chat]; estadoSucio = true;
+    return enviar(chat, `✅ Grupo <b>${esc(nombre)}</b> borrado.\n\n${textoCategorias()}`, MENU_CATS());
   }
   if (acc === "ncat") {
     const st = estado.pend[chat]; if (st?.tipo !== "nuevo") return;
