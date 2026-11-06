@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 <meta property="og:title" content="Nexo — Catálogo de productos para Cuba">
 <meta property="og:description" content="Más de 340 productos con foto real y precio claro. Entrega a domicilio y atención directa por WhatsApp.">
 <meta property="og:type" content="website">
@@ -239,6 +239,41 @@
   </div>
 </section>
 
+<!-- ============ ENTREGA ============ -->
+<section id="envio" class="envio">
+  <div class="pad">
+    <div class="envio-cab">
+      <div>
+        <p class="lbl mono">[ 03.5 — Entrega ]</p>
+        <h2>Vea cuánto cuesta llevarlo.</h2>
+        <p class="sec-nota">Elija su municipio y le damos una estimación antes de que escriba por WhatsApp. El precio final se confirma con usted antes de pagar.</p>
+      </div>
+      <p class="envio-confianza mono">PRECIO ORIENTATIVO<br><span>CONFIRMACIÓN HUMANA</span></p>
+    </div>
+    <div class="envio-caja">
+      <label class="envio-campo">
+        <span class="m">¿A dónde va el pedido?</span>
+        <select id="envio-zona" aria-describedby="envio-ayuda">
+          <option value="">— Elija el municipio —</option>
+          <optgroup label="La Habana">
+            <option value="habana-vieja">La Habana Vieja</option><option value="centro-habana">Centro Habana</option><option value="plaza">Plaza de la Revolución</option><option value="cerro">Cerro</option><option value="diez-de-octubre">Diez de Octubre</option><option value="playa">Playa</option><option value="marianao">Marianao</option><option value="la-lisa">La Lisa</option><option value="regla">Regla</option><option value="habana-del-este">La Habana del Este</option><option value="guanabacoa">Guanabacoa</option><option value="san-miguel">San Miguel del Padrón</option><option value="arroyo-naranjo">Arroyo Naranjo</option><option value="boyeros">Boyeros</option><option value="cotorro">Cotorro</option>
+          </optgroup>
+          <optgroup label="Alrededores y otras provincias">
+            <option value="bauta">Bauta</option><option value="artemisa">Artemisa</option><option value="san-jose">San José de las Lajas</option><option value="otra">Otro municipio</option>
+          </optgroup>
+        </select>
+      </label>
+      <button id="envio-calcular" class="cta cta-llena" type="button">Calcular estimación <span aria-hidden="true">→</span></button>
+      <div id="envio-resultado" class="envio-resultado" role="status" aria-live="polite" hidden>
+        <div><span class="m">Destino</span><strong id="envio-lugar">—</strong></div>
+        <div><span class="m">Entrega estimada</span><strong id="envio-precio">—</strong></div>
+        <p id="envio-letra" class="m"></p>
+      </div>
+      <p id="envio-ayuda" class="envio-ayuda m">Si su municipio no aparece, escríbanos y confirmamos la entrega por WhatsApp.</p>
+    </div>
+  </div>
+</section>
+
 <!-- ============ CÓMO FUNCIONA ============ -->
 <section id="como" class="como">
   <div class="pad">
@@ -425,7 +460,12 @@
   <p id="carro-vacio" class="carro-vacio-t">Su carrito está vacío.<br><span>Añada productos desde el catálogo.</span></p>
   <div class="carro-pie" id="carro-pie">
     <div class="carro-total"><span class="m">Total</span><strong id="carro-total">$0</strong></div>
+    <div class="carro-envio" id="carro-envio" hidden>
+      <div><span class="m">Entrega estimada</span><strong id="carro-envio-precio">—</strong></div>
+      <p id="carro-envio-lugar" class="m"></p>
+    </div>
     <a class="big" id="carro-wa" href="#" target="_blank" rel="noopener">Pedir por WhatsApp <span aria-hidden="true">↗</span></a>
+    <a class="btn-linea carro-llamada" id="carro-llamada" href="https://wa.me/5356865093?text=Hola%2C%20quiero%20agendar%20una%20llamada%20gratuita%20de%2010%20minutos%20sobre%20mi%20pedido%20de%20Nexo." target="_blank" rel="noopener">Agendar llamada gratuita de 10 minutos</a>
     <p class="m carro-nota">Enviamos la lista completa por WhatsApp y confirmamos disponibilidad y envío.</p>
   </div>
 </aside>
@@ -457,6 +497,7 @@
       <div class="modal-acciones">
         <button class="big" id="m-add">Añadir al carrito</button>
         <a class="btn-linea" id="m-wa" href="#" target="_blank" rel="noopener">Preguntar por WhatsApp</a>
+        <a class="btn-linea producto-llamada" id="m-llamada" href="#" target="_blank" rel="noopener">Agendar llamada gratuita de 10 minutos</a>
       </div>
       <p class="m-nota">¿Dudas? Agende una <strong>llamada gratuita</strong> antes de comprar y se lo explicamos todo. Si está agotado, escriba igual: le avisamos apenas vuelva a entrar.</p>
     </div>
@@ -466,6 +507,6 @@
 <script src="catalogo.js?v=mw2rzcbd" defer></script>
 <script src="esfera.js?v=6" defer></script>
 <script src="micro.js?v=7" defer></script>
-<script src="app.js?v=sug2" defer></script>
+<script src="app.js?v=conv1" defer></script>
 </body>
 </html>

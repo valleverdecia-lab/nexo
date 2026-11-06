@@ -6,6 +6,51 @@ const TOTAL=CATALOGO.length;
 const fmt=c=>(c/100).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2})+" USD";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>"&#"+c.charCodeAt(0)+";");
 const norm=s=>String(s??"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const LS=(()=>{try{return window["local"+"Storage"]}catch(e){return null}})();
+
+/* ---------- entrega: estimación pública, confirmación humana ---------- */
+const ENVIO_ZONAS={
+  "habana-vieja":{n:"La Habana Vieja",c:0,t:"Sin cargo estimado dentro del radio cercano."},
+  "centro-habana":{n:"Centro Habana",c:0,t:"Sin cargo estimado dentro del radio cercano."},
+  "plaza":{n:"Plaza de la Revolución",c:0,t:"Sin cargo estimado dentro del radio cercano."},
+  "cerro":{n:"Cerro",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
+  "diez-de-octubre":{n:"Diez de Octubre",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
+  "playa":{n:"Playa",c:0,t:"Sin cargo estimado dentro del radio cercano."},
+  "marianao":{n:"Marianao",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
+  "la-lisa":{n:"La Lisa",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
+  "regla":{n:"Regla",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
+  "habana-del-este":{n:"La Habana del Este",c:491,t:"Estimado por zona; se confirma por WhatsApp."},
+  "guanabacoa":{n:"Guanabacoa",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
+  "san-miguel":{n:"San Miguel del Padrón",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
+  "arroyo-naranjo":{n:"Arroyo Naranjo",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
+  "boyeros":{n:"Boyeros",c:940,t:"Estimado por zona; se confirma por WhatsApp."},
+  "cotorro":{n:"Cotorro",c:915,t:"Estimado por zona; se confirma por WhatsApp."},
+  "bauta":{n:"Bauta",c:null,t:"Coordinamos el envío por WhatsApp."},
+  "artemisa":{n:"Artemisa",c:null,t:"Coordinamos el envío por WhatsApp."},
+  "san-jose":{n:"San José de las Lajas",c:null,t:"Coordinamos el envío por WhatsApp."},
+  "otra":{n:"Otro municipio",c:null,t:"Díganos dónde es y confirmamos el envío por WhatsApp."}
+};
+let envio={};
+try{envio=LS?JSON.parse(LS.getItem("nexo-envio")||"{}")||{}:{}}catch(e){}
+function guardarEnvio(){try{LS&&LS.setItem("nexo-envio",JSON.stringify(envio))}catch(e){}}
+function calcularEnvio(id){return ENVIO_ZONAS[id]||null}
+function textoEnvio(e){return !e?"A confirmar":e.c===null?"A confirmar":e.c===0?"Sin cargo":fmt(e.c)}
+function pintarEnvio(){
+  const sel=$("#envio-zona"), resultado=$("#envio-resultado"), lugar=$("#envio-lugar"), precio=$("#envio-precio"), letra=$("#envio-letra");
+  if(!sel||!resultado)return;
+  sel.value=envio.id||"";
+  const e=calcularEnvio(envio.id);
+  if(!e){resultado.hidden=true;return}
+  resultado.hidden=false;lugar.textContent=e.n;precio.textContent=textoEnvio(e);letra.textContent=e.t;
+  resultado.classList.toggle("is-consulta",e.c===null);resultado.classList.toggle("is-gratis",e.c===0);
+  pintarCarro();
+}
+$("#envio-calcular")?.addEventListener("click",()=>{
+  const id=$("#envio-zona").value;
+  if(!id){$("#envio-resultado").hidden=true;$("#envio-zona").focus();return}
+  envio={id};guardarEnvio();pintarEnvio();
+});
+$("#envio-zona")?.addEventListener("change",()=>{if(!$("#envio-zona").value){envio={};guardarEnvio();pintarEnvio()}});
 
 /* grupos: g -> {nombre, subs:[nombres]} */
 const GRUPO_NOMBRE={...Object.fromEntries(Object.entries(GRUPOS).map(([g,d])=>[g,d.nombre]))};
@@ -20,7 +65,6 @@ const productReveal=new IntersectionObserver(es=>es.forEach(e=>{
 }),{rootMargin:"0px 0px -8% 0px",threshold:.08});
 
 /* ---------- carrito ---------- */
-const LS=(()=>{try{return window["local"+"Storage"]}catch(e){return null}})();
 let carro={};
 try{carro=LS?JSON.parse(LS.getItem("nexo-carro")||"{}")||{}:{}}catch(e){}
 const guardarCarro=()=>{try{LS&&LS.setItem("nexo-carro",JSON.stringify(carro))}catch(e){}};
@@ -50,8 +94,11 @@ function pintarCarro(){
     </li>`}).join("");
   const tot=totalCarro();
   $("#carro-total").textContent=fmt(tot);
+  const e=calcularEnvio(envio.id), envioBox=$("#carro-envio"), envioPrecio=$("#carro-envio-precio"), envioLugar=$("#carro-envio-lugar");
+  if(envioBox){envioBox.hidden=!e; if(e){envioPrecio.textContent=textoEnvio(e);envioLugar.textContent=`${e.n} · ${e.c===null?"precio a confirmar":"estimación orientativa"}`}}
   const lineas=ids.map(id=>{const p=porId[id];return `• ${carro[id]} × ${p.n} — ${fmt(carro[id]*p.pv)}`});
-  const msg=`Hola, quiero hacer un pedido:\n${lineas.join("\n")}\nTotal: ${fmt(tot)}`;
+  const envioLinea=e?`\nEntrega a ${e.n}: ${textoEnvio(e)}\n${e.c===null?"El costo se confirma por WhatsApp.":"Es una estimación; confirmar dirección y precio final."}`:"\nEntrega: por confirmar";
+  const msg=`Hola, quiero hacer un pedido en Nexo:\n${lineas.join("\n")}\nSubtotal: ${fmt(tot)}${envioLinea}\n¿Me confirman existencia, garantía y total final?`;
   $("#carro-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
 }
 /* sugerencias tras añadir al carrito */
@@ -205,7 +252,11 @@ function abrir(id){
   $("#m-desc-l").textContent=p.dl||"";
   $("#m-venta").textContent=p.v||"";
   $("#m-specs").innerHTML=(p.sp||[]).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
-  $("#m-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, me interesa: ${p.n} — ${fmt(p.pv)}`)}`;
+  const destino=calcularEnvio(envio.id);
+  const destinoTxt=destino?` Entrega estimada a ${destino.n}: ${textoEnvio(destino)}.`:"";
+  $("#m-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, me interesa: ${p.n} — ${fmt(p.pv)}.${destinoTxt} ¿Me confirman disponibilidad, garantía y precio final?`)}`;
+  const llamada=$("#m-llamada");
+  if(llamada) llamada.href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, quiero agendar una llamada gratuita de 10 minutos sobre ${p.n}. Precio publicado: ${fmt(p.pv)}.${destinoTxt} Quiero saber si es adecuado para mi necesidad.`)}`;
   const b=$("#m-add"); b.textContent="Añadir al carrito"; b.disabled=false;
   const position=lista.findIndex(item=>item.s===id);
   const prev=$("#m-prev"), next=$("#m-next"), pos=$("#m-pos");
@@ -362,7 +413,7 @@ if(matchMedia('(hover:hover) and (pointer:fine)').matches){
 /* intro: reveal del titular */
 addEventListener("load",()=>setTimeout(()=>document.body.classList.add("go"),reduce?0:300));
 
-pintarChips(); pintarCarroN(); aplicar(); if(nCarro())pintarSugerencias(Object.keys(carro).find(id=>porId[id]));
+pintarChips(); pintarEnvio(); pintarCarroN(); aplicar(); if(nCarro())pintarSugerencias(Object.keys(carro).find(id=>porId[id]));
 
 /* ---------- señal de interacción local ---------- */
 (function(){
