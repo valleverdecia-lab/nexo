@@ -25,7 +25,8 @@
 
   // 65% appear from below; 35% arrive laterally. Existing palette and layout stay untouched.
   const candidates=$$('.pad .lbl, .pad h2, .pad .sec-nota, .bento-tile, .filtros, .envio-caja, .como-paso, .carrusel, .dato, .cierre-txt, #nexo-advisor');
-  candidates.forEach((el,i)=>{const side=(i%20)<7;el.classList.add('growth-reveal','growth-hidden');if(side){el.classList.add('growth-side');if(i%2)el.classList.add('growth-left')}});
+  const sideTarget=Math.round(candidates.length*.35), sideIndexes=new Set(Array.from({length:sideTarget},(_,n)=>Math.min(candidates.length-1,Math.floor(n*candidates.length/sideTarget))));
+  candidates.forEach((el,i)=>{const side=sideIndexes.has(i);el.classList.add('growth-reveal','growth-hidden');if(side){el.classList.add('growth-side');if(i%2)el.classList.add('growth-left')}});
   const io=new IntersectionObserver(entries=>entries.forEach(entry=>{if(!entry.isIntersecting)return;entry.target.classList.remove('growth-hidden');entry.target.classList.add('growth-in');io.unobserve(entry.target)}),{rootMargin:'0px 0px -10% 0px',threshold:.08});
   candidates.forEach(el=>io.observe(el));
 })();
