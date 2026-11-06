@@ -10,13 +10,13 @@ const LS=(()=>{try{return window["local"+"Storage"]}catch(e){return null}})();
 
 /* ---------- entrega: estimación pública, confirmación humana ---------- */
 const ENVIO_ZONAS={
-  "habana-vieja":{n:"La Habana Vieja",c:0,t:"Sin cargo estimado dentro del radio cercano."},
-  "centro-habana":{n:"Centro Habana",c:0,t:"Sin cargo estimado dentro del radio cercano."},
-  "plaza":{n:"Plaza de la Revolución",c:0,t:"Sin cargo estimado dentro del radio cercano."},
-  "vedado":{n:"Vedado",c:0,t:"Sin cargo estimado dentro del radio cercano."},
+  "habana-vieja":{n:"La Habana Vieja",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
+  "centro-habana":{n:"Centro Habana",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
+  "plaza":{n:"Plaza de la Revolución",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
+  "vedado":{n:"Vedado",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
   "cerro":{n:"Cerro",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
   "diez-de-octubre":{n:"Diez de Octubre",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
-  "playa":{n:"Playa",c:0,t:"Sin cargo estimado dentro del radio cercano."},
+  "playa":{n:"Playa",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
   "marianao":{n:"Marianao",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
   "la-lisa":{n:"La Lisa",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
   "regla":{n:"Regla",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
@@ -39,12 +39,7 @@ let envio={};
 try{envio=LS?JSON.parse(LS.getItem("nexo-envio")||"{}")||{}:{}}catch(e){}
 function guardarEnvio(){try{LS&&LS.setItem("nexo-envio",JSON.stringify(envio))}catch(e){}}
 function calcularEnvio(id){return ENVIO_ZONAS[id]||null}
-function textoEnvio(e){return !e?"A confirmar":e.c===null?"A confirmar":e.c===0?"Sin cargo":fmt(e.c)}
-function garantiaProducto(p){return (p.sp||[]).find(([k])=>/garant/i.test(k))?.[1]||"No indicada en esta ficha"}
-function resumenGarantiaCategoria(c){
-  const valores=[...new Set(CATALOGO.filter(p=>p.c===c).map(garantiaProducto).filter(v=>v&&v!=="No indicada en esta ficha"))];
-  return valores.length?valores.join(" · "):"No hay una política publicada para esta categoría";
-}
+function textoEnvio(e){return !e?"A confirmar":e.c===null?"A confirmar":e.c===0?"Va por la casa":fmt(e.c)}
 function pintarEnvio(){
   const sel=$("#envio-zona"), resultado=$("#envio-resultado"), lugar=$("#envio-lugar"), precio=$("#envio-precio"), letra=$("#envio-letra");
   if(!sel||!resultado)return;
@@ -61,6 +56,31 @@ $("#envio-calcular")?.addEventListener("click",()=>{
   envio={id};guardarEnvio();pintarEnvio();
 });
 $("#envio-zona")?.addEventListener("change",()=>{if(!$("#envio-zona").value){envio={};guardarEnvio();pintarEnvio()}});
+
+/* ---------- camión de mensajería en bucle ---------- */
+(()=>{
+  const ruta=$(".envio-ruta"), camion=$(".envio-camion");
+  if(!ruta||!camion||reduce)return;
+  const duracion=7200, puntos=[.16,.38,.60,.82];
+  let inicio=performance.now(), ultimo=0, soltados=new Set(), cajas=[];
+  function recorrer(ahora){
+    const progreso=((ahora-inicio)%duracion)/duracion;
+    if(progreso<ultimo){cajas.forEach(c=>c.remove());cajas=[];soltados.clear()}
+    camion.style.transform=`translateX(${Math.max(0,ruta.clientWidth-64)*progreso}px)`;
+    puntos.forEach((p,i)=>{
+      if(progreso>=p&&!soltados.has(i)){
+        const caja=document.createElement("span");
+        caja.className="envio-paquete";
+        caja.style.left=`calc(${p*100}% - 16px)`;
+        ruta.append(caja); cajas.push(caja); soltados.add(i);
+        setTimeout(()=>{caja.remove();cajas=cajas.filter(x=>x!==caja)},1600);
+      }
+    });
+    ultimo=progreso;
+    requestAnimationFrame(recorrer);
+  }
+  requestAnimationFrame(recorrer);
+})();
 
 /* grupos: g -> {nombre, subs:[nombres]} */
 const GRUPO_NOMBRE={...Object.fromEntries(Object.entries(GRUPOS).map(([g,d])=>[g,d.nombre]))};
@@ -105,10 +125,10 @@ function pintarCarro(){
   const tot=totalCarro();
   $("#carro-total").textContent=fmt(tot);
   const e=calcularEnvio(envio.id), envioBox=$("#carro-envio"), envioPrecio=$("#carro-envio-precio"), envioLugar=$("#carro-envio-lugar");
-  if(envioBox){envioBox.hidden=!e; if(e){envioPrecio.textContent=textoEnvio(e);envioLugar.textContent=`${e.n} · ${e.c===null?"precio a confirmar":"estimación orientativa"}`}}
+  if(envioBox){envioBox.hidden=!e; if(e){envioPrecio.textContent=textoEnvio(e);envioLugar.textContent=`${e.n} · ${e.c===null?"precio a confirmar":e.c===0?"entrega va por la casa":"estimación orientativa"}`}}
   const lineas=ids.map(id=>{const p=porId[id];return `• ${carro[id]} × ${p.n} — ${fmt(carro[id]*p.pv)}`});
-  const envioLinea=e?`\nEntrega a ${e.n}: ${textoEnvio(e)}\n${e.c===null?"El costo se confirma por WhatsApp.":"Es una estimación; confirmar dirección y precio final."}`:"\nEntrega: por confirmar";
-  const msg=`Hola, quiero hacer un pedido en Nexo:\n${lineas.join("\n")}\nSubtotal: ${fmt(tot)}${envioLinea}\n¿Me confirman existencia, garantía y total final?`;
+  const envioLinea=e?`\nEntrega a ${e.n}: ${textoEnvio(e)}\n${e.c===null?"El costo se confirma por WhatsApp.":"Confirme la dirección y el precio final de la entrega."}`:"\nEntrega: se confirma por WhatsApp";
+  const msg=`Hola, quiero hacer un pedido en Nexo:\n${lineas.join("\n")}\nSubtotal: ${fmt(tot)}${envioLinea}\n¿Me confirman existencia y total final antes de cerrar el pedido?`;
   $("#carro-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
 }
 /* sugerencias tras añadir al carrito */
@@ -261,13 +281,11 @@ function abrir(id){
   $("#m-desc-c").textContent=p.dc||"";
   $("#m-desc-l").textContent=p.dl||"";
   $("#m-venta").textContent=p.v||"";
-  $("#m-specs").innerHTML=(p.sp||[]).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
-  const garantia=garantiaProducto(p), garantiaTitulo=$("#m-garantia-titulo"), garantiaTexto=$("#m-garantia-texto");
-  if(garantiaTitulo) garantiaTitulo.textContent=garantia;
-  if(garantiaTexto) garantiaTexto.textContent=`En ${p.c}: ${resumenGarantiaCategoria(p.c)}. Revise la garantía exacta de esta ficha y pregunte cualquier duda antes de pagar.`;
+  const mSpecs=$("#m-specs");
+  if(mSpecs)mSpecs.innerHTML=(p.sp||[]).filter(([k])=>!/garant/i.test(k)).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
   const destino=calcularEnvio(envio.id);
   const destinoTxt=destino?` Entrega estimada a ${destino.n}: ${textoEnvio(destino)}.`:"";
-  $("#m-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, me interesa: ${p.n} — ${fmt(p.pv)}.${destinoTxt} ¿Me confirman disponibilidad, garantía y precio final?`)}`;
+  $("#m-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, me interesa ${p.n} (${p.c}) — precio publicado: ${fmt(p.pv)}.${destinoTxt} ¿Me confirman disponibilidad, características y precio final?`)}`;
   const llamada=$("#m-llamada");
   if(llamada) llamada.href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, quiero agendar una llamada gratuita de 10 minutos sobre ${p.n}. Precio publicado: ${fmt(p.pv)}.${destinoTxt} Quiero saber si es adecuado para mi necesidad.`)}`;
   const b=$("#m-add"); b.textContent="Añadir al carrito"; b.disabled=false;
@@ -326,7 +344,7 @@ const RESENAS=[
  {t:"Era mi primera compra por internet y tenía mis dudas, pero como ya antes le había comprado alimentos a la tienda, me decidí a confiar. La mensajería gratuita fue una maravilla y mi split llegó ese mismo día. Enfría súper bien y me ha aliviado muchísimo con este calor.",n:"Yanet",r:"Cliente",l:"El Luyanó, La Habana",i:"Y",p:"Split de aire acondicionado",cal:"4.9 de 5"},
  {t:"Compré el sillón reclinable de cuero y llegó al otro día. Venía igual a la foto, sin un rasguño. El muchacho del reparto me ayudó a subirlo hasta el tercer piso.",n:"Laura",r:"Cliente",l:"La Habana Vieja, La Habana",i:"L",p:"Sillón reclinable de cuero",cal:"5 de 5"},
  {t:"El combo del inversor con las cuatro baterías me resolvió los apagones en la casa. Me explicaron por WhatsApp cómo conectarlo y quedó andando esa misma tarde, con una calidad enorme.",n:"Luis Ramírez",r:"Cliente",l:"Playa, La Habana",i:"LR",p:"Combo de inversor con cuatro baterías",cal:"4.7 de 5"},
- {t:"Lo que más me gustó es que le puedes escribir por WhatsApp y te contesta una persona, no un robot. Ya me he acostumbrado a comprar con ellos: una garantía asegurada.",n:"Dayana Fonseca",r:"Cliente",l:"Marianao, La Habana",i:"DF",p:"Paneles solares",cal:"5 de 5"},
+ {t:"Lo que más me gustó es que le puedes escribir por WhatsApp y te contesta una persona, no un robot.",n:"Dayana Fonseca",r:"Cliente",l:"Marianao, La Habana",i:"DF",p:"Paneles solares",cal:"5 de 5"},
  {t:"Bueno, estuve un poco disgustada porque la primera vez que decidí comunicarme con ellos demoraron en responder, pero me pudieron atender con mensajería gratuita e incluso me ayudaron con la instalación del producto y todo. Me encantó todo.",n:"Cliente",r:"Compra verificada",l:"",i:"✓",p:"",cal:"4.6 de 5"},
 ];
 $("#riel").innerHTML=RESENAS.map(r=>`<li>
@@ -353,7 +371,7 @@ addEventListener("resize",()=>paso(0));
 
 /* ---------- oferta / accordion ---------- */
 const OFFER_MESSAGES={
-  calidad:["Lo que ve es lo que llega.","Hola, me interesa la calidad y las garantías de los productos de Nexo."],
+  calidad:["Lo que ve es lo que llega.","Hola, me interesa conocer las características y condiciones de compra de los productos de Nexo."],
   gestores:["Crece con un catálogo que responde.","Hola, me interesa la oportunidad para ser gestor de ventas de Nexo."],
   afiliados:["Convierte tu alcance en oportunidad.","Hola, me interesa la oportunidad para ser clipper o afiliado de marketing de Nexo."],
   contacto:["Cuéntanos qué estás buscando.","Hola, me interesa Nexo y quisiera conversar sobre las oportunidades disponibles."]

@@ -851,8 +851,6 @@ footer{
   padding:1.1rem 1.3rem;margin-bottom:1.3rem;
 }
 .m-venta-t{text-transform:uppercase;color:var(--ac);margin-bottom:.5rem}
-.m-garantia{padding:1rem 1.2rem;margin:-.35rem 0 1.3rem;border:1px solid rgba(116,232,155,.28);border-left:3px solid #74e89b;border-radius:var(--r-md);background:rgba(116,232,155,.055)}
-.m-garantia .m-venta-t{color:#74e89b;margin-bottom:.35rem}.m-garantia strong{display:block;font-size:1rem;color:var(--txt)}.m-garantia p:last-child{margin-top:.3rem;color:var(--txt3);font-size:.82rem;line-height:1.5}
 .especificaciones{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
   gap:.7rem 1.4rem;margin-bottom:1.4rem;
@@ -1069,3 +1067,15 @@ footer{
 .carro-envio>div{display:flex;justify-content:space-between;gap:1rem;align-items:baseline}.carro-envio strong{font-family:'JetBrains Mono',monospace;color:var(--ac)}.carro-envio p{margin:0;color:var(--txt3)}
 .carro-llamada,.producto-llamada{font-size:.82rem;text-align:center}
 @media(max-width:640px){.envio-cab{display:block}.envio-confianza{text-align:left;margin-top:1rem}.envio-caja{grid-template-columns:1fr}.envio-caja>.cta{width:100%}.envio-resultado{grid-template-columns:1fr}.envio-resultado p{grid-column:auto}}
+
+
+/* ---------- Mensajería: camión y paquetes animados ---------- */
+.envio-ruta{position:relative;width:min(100%,620px);height:46px;margin:.85rem 0 .55rem;border-bottom:1px solid var(--linea-f);overflow:hidden}
+.envio-ruta::after{content:"";position:absolute;left:0;right:0;bottom:-1px;border-bottom:1px dashed rgba(148,168,196,.22)}
+.envio-camion{position:absolute;z-index:2;left:0;bottom:1px;width:64px;height:36px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.38));animation:envio-recorrido 7.2s linear infinite}
+.envio-paquete{position:absolute;z-index:1;bottom:0;width:32px;height:32px;border:1px solid #e3b17e;background:linear-gradient(90deg,transparent 45%,rgba(91,53,25,.28) 45%,rgba(91,53,25,.28) 55%,transparent 55%),linear-gradient(0deg,transparent 45%,rgba(91,53,25,.25) 45%,rgba(91,53,25,.25) 55%,transparent 55%),#c98a52;border-radius:2px;opacity:0;transform:translateY(-18px) scale(.9);animation:envio-paquete-caida 1.6s ease-out forwards}
+@keyframes envio-recorrido{0%{transform:translateX(0)}100%{transform:translateX(calc(100% - 64px))}}
+@keyframes envio-paquete-caida{0%{opacity:0;transform:translateY(-18px) scale(.9)}18%,55%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(10px) scale(.84)}}
+
+@media(max-width:700px){.envio-ruta{width:100%}}
+@media(prefers-reduced-motion:reduce){.envio-camion,.envio-paquete{animation:none}.envio-camion{transform:translateX(0)}.envio-paquete{opacity:0}}
