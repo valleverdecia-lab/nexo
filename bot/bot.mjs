@@ -40,6 +40,8 @@ const config = leerJSON(F_CFG, {});
 let db = leerCatalogo();
 let sucio = false, estadoSucio = false;
 const cambios = [];
+const confirmacionesPublicacion = [];
+const fichasPendientes = [];
 
 const usd = c => (c / 100).toLocaleString("en-US", { maximumFractionDigits: 2 }) + " USD";
 const buscarP = s => db.CATALOGO.find(p => p.s === s);
@@ -74,15 +76,53 @@ async function avisoWhatsApp(texto) {
 }
 
 // ---------- Telegram ----------
+const pausa = ms => new Promise(resolve => setTimeout(resolve, ms));
+async function fetchConReintentos(url, opciones = {}, { etiqueta = "HTTP", intentos = 5, timeoutMs = 15000 } = {}) {
+  for (let intento = 1; intento <= intentos; intento++) {
+    try {
+      const r = await fetch(url, { ...opciones, signal: AbortSignal.timeout(timeoutMs) });
+      if (r.status !== 429 && r.status < 500) return r;
+      if (intento === intentos) return r;
+      const info = await r.clone().json().catch(() => ({}));
+      const retryAfter = Number(info.parameters?.retry_after || r.headers.get("retry-after")) * 1000;
+      const espera = Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(retryAfter, 60000)
+        : Math.min(30000, 1000 * (2 ** (intento - 1)));
+      console.warn(`${etiqueta}: HTTP ${r.status}; reintento ${intento + 1}/${intentos} en ${espera}ms`);
+      await pausa(espera);
+    } catch (e) {
+      if (intento === intentos) {
+        console.warn(`${etiqueta}: sin respuesta tras ${intentos} intentos: ${e.message}`);
+        return null;
+      }
+      const espera = Math.min(30000, 1000 * (2 ** (intento - 1)));
+      console.warn(`${etiqueta}: ${e.message}; reintento ${intento + 1}/${intentos} en ${espera}ms`);
+      await pausa(espera);
+    }
+  }
+  return null;
+}
 async function tg(metodo, datos = {}) {
-  const r = await fetch(`${API}/bot${TOKEN}/${metodo}`, {
+  const timeoutMs = metodo === "getUpdates" ? Math.max(15000, (Number(datos.timeout) || 0) * 1000 + 15000) : 15000;
+  const r = await fetchConReintentos(`${API}/bot${TOKEN}/${metodo}`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos)
-  });
+  }, { etiqueta: `Telegram ${metodo}`, timeoutMs });
+  if (!r) return { ok: false, description: "Fallo de red tras varios reintentos." };
   const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    j.ok = false;
+    if (!j.description) j.description = `HTTP ${r.status}`;
+  }
   if (!j.ok && metodo !== "getUpdates") console.log("TG error", metodo, j.description);
   return j;
 }
-const enviar = (chat, text, extra = {}) => tg("sendMessage", { chat_id: chat, text, parse_mode: "HTML", disable_web_page_preview: true, ...extra });
+const enviar = (chat, text, extra = {}) => {
+  if (sucio && typeof text === "string" && text.trimStart().startsWith("✅")) {
+    confirmacionesPublicacion.push({ chat, text, extra, avisoEnviado: false });
+    return Promise.resolve({ ok: true, pendiente: true });
+  }
+  return tg("sendMessage", { chat_id: chat, text, parse_mode: "HTML", disable_web_page_preview: true, ...extra });
+};
 const teclado = filas => ({ reply_markup: { inline_keyboard: filas } });
 const esc = t => String(t ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 
@@ -135,7 +175,8 @@ async function prepararFoto(buf, destino) {
 async function bajarFoto(fileId, slug) {
   const f = await tg("getFile", { file_id: fileId });
   if (!f.ok) throw new Error("No pude descargar la foto");
-  const r = await fetch(`${API}/file/bot${TOKEN}/${f.result.file_path}`);
+  const r = await fetchConReintentos(`${API}/file/bot${TOKEN}/${f.result.file_path}`, {}, { etiqueta: "Descarga de foto", timeoutMs: 30000 });
+  if (!r?.ok) throw new Error("No pude descargar la foto tras varios intentos");
   const buf = Buffer.from(await r.arrayBuffer());
   const nombre = `${slug}-${Date.now().toString(36)}.webp`;
   try {
@@ -188,11 +229,15 @@ function fichaBotones(p) {
     [{ text: "📝 Desc. corta", callback_data: `ed:dc:${s}` }, { text: "📄 Desc. larga", callback_data: `ed:dl:${s}` }],
     [{ text: "💬 Texto de venta", callback_data: `ed:v:${s}` }, { text: "📋 Especificaciones", callback_data: `ed:sp:${s}` }],
     [{ text: "🖼 Cambiar foto", callback_data: `ed:foto:${s}` }, { text: "📂 Categoría", callback_data: `cat:${s}` }],
-    [{ text: p.e === "agotado" ? "🟢 Marcar disponible" : "🔴 Marcar agotado", callback_data: `est:${s}` }],
+    [{ text: p.e === "agotado" ? "🟢 Marcar disponible" : "🔴 Marcar agotado", callback_data: `est:${s}:${p.e === "agotado" ? "hay" : "agotado"}` }],
     [{ text: "🗑 Borrar producto", callback_data: `del:${s}` }]
   ]);
 }
 async function mostrarFicha(chat, p) {
+  if (sucio) {
+    fichasPendientes.push({ chat, p });
+    return { ok: true, pendiente: true };
+  }
   const foto = path.join(DIR_FOTOS, p.f || p.s + ".webp");
   const url = config.web ? `${config.web.replace(/\/$/, "")}/fotos/${p.f || p.s + ".webp"}` : null;
   if (url && fs.existsSync(foto) && !p.f) {
@@ -475,7 +520,8 @@ async function iniciarNuevo(chat) {
 async function bajarVideo(fileId, slug) {
   const f = await tg("getFile", { file_id: fileId });
   if (!f.ok) throw new Error("No pude descargar el vídeo");
-  const r = await fetch(`${API}/file/bot${TOKEN}/${f.result.file_path}`);
+  const r = await fetchConReintentos(`${API}/file/bot${TOKEN}/${f.result.file_path}`, {}, { etiqueta: "Descarga de vídeo", timeoutMs: 30000 });
+  if (!r?.ok) throw new Error("No pude descargar el vídeo tras varios intentos");
   const buf = Buffer.from(await r.arrayBuffer());
   if (buf.length > 18 * 1024 * 1024) throw new Error("Vídeo demasiado grande (máx. ~18 MB)");
   const ext = (f.result.file_path.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -622,7 +668,13 @@ async function onBoton(q) {
   }
   if (acc === "cat") return enviar(chat, `📂 Nueva categoría para <b>${esc(p.n)}</b>:`, botonesCategorias(`mv|${clave(p.s)}`));
   if (acc === "est") {
-    p.e = p.e === "agotado" ? "hay" : "agotado";
+    const textoBoton = q.message?.reply_markup?.inline_keyboard?.flat()?.find(x => x.callback_data === q.data)?.text || "";
+    const objetivo = b === "agotado" || b === "hay" ? b
+      : textoBoton.includes("Marcar agotado") ? "agotado"
+      : textoBoton.includes("Marcar disponible") ? "hay" : null;
+    if (!objetivo) return enviar(chat, "⚠️ Ese botón está desactualizado. Vuelva a abrir la ficha del producto.", MENU);
+    if (p.e === objetivo) return enviar(chat, `ℹ️ El catálogo ya marca <b>${esc(p.n)}</b> como ${objetivo === "agotado" ? "agotado" : "disponible"}. No repetí la acción; revise la web antes de volver a pulsar.`);
+    p.e = objetivo;
     marcar(`${p.n}: ${p.e === "agotado" ? "agotado" : "disponible"}`);
     await enviar(chat, `✅ ${esc(p.n)} ahora está <b>${p.e === "agotado" ? "agotado" : "disponible"}</b>.`);
     return mostrarFicha(chat, p);
@@ -635,7 +687,7 @@ async function onBoton(q) {
     const orig = path.join(DIR_FOTOS, p.s + ".webp");
     if (fs.existsSync(orig)) fs.unlinkSync(orig);
     marcar(`Borrado: ${p.n}`);
-    return enviar(chat, `🗑 Borrado <b>${esc(p.n)}</b>. Desaparece de la web en 1–3 minutos.`, MENU);
+    return enviar(chat, `✅ Borrado <b>${esc(p.n)}</b>.`, MENU);
   }
 }
 // mover de categoría: callback "mv|slug:g:i"
@@ -653,22 +705,124 @@ async function onBotonMover(q) {
 }
 
 // ---------- publicar ----------
-function publicar() {
-  if (sucio) guardarCatalogo(db);
-  if (sucio || estadoSucio) fs.writeFileSync(F_EST, JSON.stringify(estado, null, 1));
-  if (SIN_GIT || (!sucio && !estadoSucio)) { sucio = estadoSucio = false; return; }
-  const msg = sucio ? "Bot: " + cambios.splice(0).join("; ").slice(0, 200) : "Bot: estado";
-  try {
-    execSync("git add -A catalogo.js index.html fotos bot/estado.json", { cwd: RAIZ });
-    execSync(`git commit -q -m ${JSON.stringify(msg)}`, { cwd: RAIZ });
-    execSync("git pull -q --rebase -X ours origin main && git push -q origin HEAD:main", { cwd: RAIZ, shell: "/bin/bash" });
-    if (sucio && process.env.GH_TOKEN && process.env.GITHUB_REPOSITORY) {
-      execSync(`curl -s -X POST -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/$GITHUB_REPOSITORY/pages/builds >/dev/null`, { shell: "/bin/bash" });
+async function githubApi(metodo, ruta) {
+  const token = process.env.GH_TOKEN, repo = process.env.GITHUB_REPOSITORY;
+  if (!token || !repo) throw new Error("Falta GH_TOKEN o GITHUB_REPOSITORY para verificar Pages");
+  const r = await fetchConReintentos(`https://api.github.com/repos/${repo}${ruta}`, {
+    method: metodo,
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${token}`,
+      "X-GitHub-Api-Version": "2022-11-28"
     }
-    /* aviso opcional al WhatsApp del dueño (variable WHATSAPP_AVISO_URL) */
-    if (sucio) avisoWhatsApp(`Nexo web actualizada: ${msg}`);
-  } catch (e) { console.log("git:", e.message); }
-  sucio = estadoSucio = false;
+  }, { etiqueta: `GitHub ${metodo} ${ruta}`, timeoutMs: 15000 });
+  if (!r) throw new Error(`Sin respuesta de GitHub en ${ruta}`);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`GitHub ${ruta}: HTTP ${r.status} ${data.message || ""}`.trim());
+  return data;
+}
+async function esperarPages(commit) {
+  const fin = Date.now() + 240000;
+  let build;
+  while (Date.now() < fin) {
+    build = await githubApi("GET", "/pages/builds/latest");
+    if (build.commit === commit && build.status === "built") return build;
+    if (build.commit === commit && build.status === "errored")
+      throw new Error(`GitHub Pages marcó error: ${build.error?.message || "sin detalle"}`);
+    await pausa(5000);
+  }
+  throw new Error(`Pages no confirmó el commit ${commit} (último estado: ${build?.status || "sin estado"})`);
+}
+async function avisarFalloPublicacion(texto, reintentara = true) {
+  const chats = [...new Set(confirmacionesPublicacion.map(x => x.chat))];
+  if (!chats.length && estado.owner) chats.push(estado.owner);
+  for (const chat of chats) {
+    const pendientes = confirmacionesPublicacion.filter(x => x.chat === chat);
+    if (pendientes.length && pendientes.every(x => x.avisoEnviado)) continue;
+    const r = await tg("sendMessage", {
+      chat_id: chat,
+      text: `⚠️ ${texto} No repita el cambio hasta revisar la web.${reintentara ? " Seguiré reintentando la publicación." : " No se enviará un check hasta confirmar la publicación."}`,
+      parse_mode: "HTML"
+    });
+    if (r.ok) for (const x of pendientes) x.avisoEnviado = true;
+  }
+}
+async function enviarConfirmacionesPublicadas() {
+  const pendientes = confirmacionesPublicacion.splice(0);
+  for (const x of pendientes) {
+    const r = await tg("sendMessage", {
+      chat_id: x.chat,
+      text: `${x.text}\n\n🌐 Publicación verificada en Nexo.`,
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+      ...x.extra
+    });
+    if (!r.ok) console.warn(`No pude entregar la confirmación publicada a ${x.chat}: ${r.description || "error Telegram"}`);
+  }
+}
+async function pushConReintentos() {
+  let ultimoError;
+  for (let intento = 1; intento <= 3; intento++) {
+    try {
+      execSync("git pull -q --rebase -X ours origin main", { cwd: RAIZ, stdio: "pipe", timeout: 30000 });
+      execSync("git push -q origin HEAD:main", { cwd: RAIZ, stdio: "pipe", timeout: 30000 });
+      return;
+    } catch (e) {
+      ultimoError = e;
+      try { execSync("git rebase --abort", { cwd: RAIZ, stdio: "ignore" }); } catch { /* puede no haber rebase abierto */ }
+      if (intento < 3) await pausa(1000 * (2 ** (intento - 1)));
+    }
+  }
+  throw ultimoError;
+}
+async function publicar() {
+  const cambioWeb = sucio;
+  if (!cambioWeb && !estadoSucio) return true;
+  if (SIN_GIT) {
+    console.warn("Publicación omitida: BOT_SIN_GIT está activado.");
+    await avisarFalloPublicacion("La publicación no está habilitada en este entorno.", false);
+    return false;
+  }
+  const msg = cambioWeb ? "Bot: " + (cambios.join("; ") || "actualización de catálogo").slice(0, 200) : "Bot: estado";
+  let pushOk = false;
+  try {
+    if (cambioWeb) {
+      guardarCatalogo(db);
+      execSync("node --check catalogo.js", { cwd: RAIZ, stdio: "pipe" });
+    }
+    fs.writeFileSync(F_EST, JSON.stringify(estado, null, 1));
+    execSync("git add -A catalogo.js index.html fotos bot/estado.json", { cwd: RAIZ, stdio: "pipe" });
+    const staged = execSync("git diff --cached --name-only", { cwd: RAIZ, encoding: "utf8" }).trim();
+    if (staged) execSync(`git commit -q -m ${JSON.stringify(msg)}`, { cwd: RAIZ, stdio: "pipe" });
+    await pushConReintentos();
+    pushOk = true;
+    const commit = execSync("git rev-parse HEAD", { cwd: RAIZ, encoding: "utf8" }).trim();
+    if (cambioWeb) {
+      await githubApi("POST", "/pages/builds");
+      await esperarPages(commit);
+    }
+    sucio = estadoSucio = false;
+    cambios.length = 0;
+    if (cambioWeb) {
+      await avisoWhatsApp(`Nexo web actualizada: ${msg}`);
+      await enviarConfirmacionesPublicadas();
+      const fichas = fichasPendientes.splice(0);
+      for (const ficha of fichas) await mostrarFicha(ficha.chat, ficha.p);
+    }
+    return true;
+  } catch (e) {
+    console.error("publicación:", e.message);
+    await avisarFalloPublicacion(pushOk
+      ? "GitHub recibió el cambio, pero Pages no confirmó que terminara la publicación."
+      : "No pude confirmar el guardado en GitHub.", !pushOk);
+    if (pushOk) {
+      sucio = estadoSucio = false;
+      cambios.length = 0;
+      confirmacionesPublicacion.length = 0;
+      fichasPendientes.length = 0;
+    }
+    return false;
+  }
 }
 
 // ---------- bucle ----------
@@ -695,13 +849,17 @@ async function main() {
   while (Date.now() < fin) {
     const espera = Math.max(1, Math.min(50, Math.floor((fin - Date.now()) / 1000) - 5));
     const r = await tg("getUpdates", { offset: estado.offset, timeout: espera, allowed_updates: ["message", "callback_query"] });
-    if (!r.ok) { await new Promise(s => setTimeout(s, 3000)); continue; }
+    if (!r.ok) {
+      if (sucio || estadoSucio) await publicar();
+      await pausa(3000);
+      continue;
+    }
     for (const u of r.result) {
       estado.offset = u.update_id + 1; estadoSucio = true;
       await procesar(u);
     }
-    if (r.result.length) publicar();
+    if (sucio || estadoSucio) await publicar();
   }
-  publicar();
+  if (sucio || estadoSucio) await publicar();
 }
 if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1]))) main();
