@@ -14,16 +14,16 @@ const ENVIO_ZONAS={
   "centro-habana":{n:"Centro Habana",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
   "plaza":{n:"Plaza de la Revolución",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
   "vedado":{n:"Vedado",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
-  "cerro":{n:"Cerro",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
-  "diez-de-octubre":{n:"Diez de Octubre",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
+  "cerro":{n:"Cerro",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "diez-de-octubre":{n:"Diez de Octubre",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
   "playa":{n:"Playa",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
-  "marianao":{n:"Marianao",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
-  "la-lisa":{n:"La Lisa",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
-  "regla":{n:"Regla",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
+  "marianao":{n:"Marianao",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "la-lisa":{n:"La Lisa",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "regla":{n:"Regla",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
   "habana-del-este":{n:"La Habana del Este",c:491,t:"Estimado por zona; se confirma por WhatsApp."},
-  "guanabacoa":{n:"Guanabacoa",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
-  "san-miguel":{n:"San Miguel del Padrón",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
-  "arroyo-naranjo":{n:"Arroyo Naranjo",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
+  "guanabacoa":{n:"Guanabacoa",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "san-miguel":{n:"San Miguel del Padrón",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "arroyo-naranjo":{n:"Arroyo Naranjo",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
   "boyeros":{n:"Boyeros",c:940,t:"Estimado por zona; se confirma por WhatsApp."},
   "cotorro":{n:"Cotorro",c:915,t:"Estimado por zona; se confirma por WhatsApp."},
   "guanabo":{n:"Guanabo",c:1397,t:"Estimado por zona; se confirma por WhatsApp."},
@@ -33,13 +33,13 @@ const ENVIO_ZONAS={
   "bauta":{n:"Bauta",c:3500,t:"Tarifa pública por zona; confirme dirección y coordinación por WhatsApp."},
   "artemisa":{n:"Artemisa",c:7500,t:"Tarifa pública por zona; confirme dirección y coordinación por WhatsApp."},
   "san-jose":{n:"San José de las Lajas",c:4000,t:"Tarifa pública por zona; confirme dirección y coordinación por WhatsApp."},
-  "otra":{n:"Otro municipio",c:null,t:"Díganos dónde es y confirmamos el envío por WhatsApp."}
+  "otra":{n:"Otro municipio",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."}
 };
 let envio={};
 try{envio=LS?JSON.parse(LS.getItem("nexo-envio")||"{}")||{}:{}}catch(e){}
 function guardarEnvio(){try{LS&&LS.setItem("nexo-envio",JSON.stringify(envio))}catch(e){}}
 function calcularEnvio(id){return ENVIO_ZONAS[id]||null}
-function textoEnvio(e){return !e?"A confirmar":e.c===null?"A confirmar":e.c===0?"Va por la casa":fmt(e.c)}
+function textoEnvio(e){return !e?"A confirmar":e.c===0||e.c===null?"Va por la casa":fmt(e.c)}
 function pintarEnvio(){
   const sel=$("#envio-zona"), resultado=$("#envio-resultado"), lugar=$("#envio-lugar"), precio=$("#envio-precio"), letra=$("#envio-letra");
   if(!sel||!resultado)return;
@@ -73,7 +73,6 @@ $("#envio-zona")?.addEventListener("change",()=>{if(!$("#envio-zona").value){env
         caja.className="envio-paquete";
         caja.style.left=`calc(${p*100}% - 16px)`;
         ruta.append(caja); cajas.push(caja); soltados.add(i);
-        setTimeout(()=>{caja.remove();cajas=cajas.filter(x=>x!==caja)},1600);
       }
     });
     ultimo=progreso;
@@ -98,11 +97,13 @@ const productReveal=new IntersectionObserver(es=>es.forEach(e=>{
 let carro={};
 try{carro=LS?JSON.parse(LS.getItem("nexo-carro")||"{}")||{}:{}}catch(e){}
 const guardarCarro=()=>{try{LS&&LS.setItem("nexo-carro",JSON.stringify(carro))}catch(e){}};
+for(const id of Object.keys(carro))if(!porId[id]||porId[id].e==="agotado")delete carro[id];
+guardarCarro();
 const nCarro=()=>Object.values(carro).reduce((a,b)=>a+b,0);
 function pintarCarroN(){const n=nCarro(),el=$("#carro-n");el.hidden=!n;el.textContent=n}
-function addCarro(id){carro[id]=(carro[id]||0)+1;guardarCarro();pintarCarroN();pintarCarro();pintarSugerencias(id)}
+function addCarro(id){const p=porId[id];if(!p||p.e==="agotado")return false;carro[id]=(carro[id]||0)+1;guardarCarro();pintarCarroN();pintarCarro();pintarSugerencias(id);return true}
 function delCarro(id){delete carro[id];guardarCarro();pintarCarroN();pintarCarro();if(!nCarro()){const z=$("#sugerencias");if(z)z.hidden=true}}
-function setCarro(id,cant){if(cant<=0)delCarro(id);else{carro[id]=cant;guardarCarro();pintarCarroN();pintarCarro()}}
+function setCarro(id,cant){const p=porId[id];if(!p||p.e==="agotado"&&cant>(carro[id]||0))return;if(cant<=0)delCarro(id);else{carro[id]=cant;guardarCarro();pintarCarroN();pintarCarro()}}
 function totalCarro(){return Object.keys(carro).reduce((a,id)=>{const p=porId[id];return p?a+carro[id]*p.pv:0},0)}
 function pintarCarro(){
   const ul=$("#carro-lista"), ids=Object.keys(carro).filter(id=>porId[id]);
@@ -125,9 +126,9 @@ function pintarCarro(){
   const tot=totalCarro();
   $("#carro-total").textContent=fmt(tot);
   const e=calcularEnvio(envio.id), envioBox=$("#carro-envio"), envioPrecio=$("#carro-envio-precio"), envioLugar=$("#carro-envio-lugar");
-  if(envioBox){envioBox.hidden=!e; if(e){envioPrecio.textContent=textoEnvio(e);envioLugar.textContent=`${e.n} · ${e.c===null?"precio a confirmar":e.c===0?"entrega va por la casa":"estimación orientativa"}`}}
+  if(envioBox){envioBox.hidden=!e; if(e){envioPrecio.textContent=textoEnvio(e);envioLugar.textContent=`${e.n} · ${e.c===null||e.c===0?"entrega va por la casa":"estimación orientativa"}`}}
   const lineas=ids.map(id=>{const p=porId[id];return `• ${carro[id]} × ${p.n} — ${fmt(carro[id]*p.pv)}`});
-  const envioLinea=e?`\nEntrega a ${e.n}: ${textoEnvio(e)}\n${e.c===null?"El costo se confirma por WhatsApp.":"Confirme la dirección y el precio final de la entrega."}`:"\nEntrega: se confirma por WhatsApp";
+  const envioLinea=e?`\nEntrega a ${e.n}: ${textoEnvio(e)}\n${e.c===null||e.c===0?"La entrega va por la casa; confirme la dirección exacta.":"Confirme la dirección y el precio final de la entrega."}`:"\nEntrega: se confirma por WhatsApp";
   const msg=`Hola, quiero hacer un pedido en Nexo:\n${lineas.join("\n")}\nSubtotal: ${fmt(tot)}${envioLinea}\n¿Me confirman existencia y total final antes de cerrar el pedido?`;
   $("#carro-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
 }
@@ -138,7 +139,7 @@ function pintarSugerencias(ultimoId){
   if(!ids.length){zona.hidden=true;return}
   const base=porId[ultimoId]&&porId[ultimoId].s===ultimoId?porId[ultimoId]:porId[ids[0]];
   const enCarro=new Set(ids);
-  const pool=CATALOGO.filter(p=>p.s!==base.s&&!enCarro.has(p.s));
+  const pool=CATALOGO.filter(p=>p.s!==base.s&&p.e!=="agotado"&&!enCarro.has(p.s));
   const mismoSub=pool.filter(p=>p.c===base.c&&p.g===base.g);
   const mismoGrupo=pool.filter(p=>p.g===base.g&&p.c!==base.c);
   const resto=pool.filter(p=>p.g!==base.g);
@@ -157,8 +158,33 @@ function pintarSugerencias(ultimoId){
     </button>`}).join("");
   zona.hidden=false;
 }
+function pintarSugerenciasProducto(id){
+  const seccion=$("#m-sugerencias"), grid=$("#m-sug-grid"), base=porId[id];
+  if(!seccion||!grid||!base){if(seccion)seccion.hidden=true;return}
+  const disponibles=CATALOGO.filter(p=>p.s!==id&&p.e!=="agotado");
+  const grupos=[
+    disponibles.filter(p=>p.g===base.g&&p.c===base.c),
+    disponibles.filter(p=>p.g===base.g&&p.c!==base.c),
+    disponibles.filter(p=>p.g!==base.g)
+  ];
+  const elegidos=[];
+  for(const grupo of grupos){for(const p of grupo){if(elegidos.length<4&&!elegidos.some(x=>x.s===p.s))elegidos.push(p)}if(elegidos.length===4)break}
+  if(!elegidos.length){seccion.hidden=true;grid.innerHTML="";return}
+  grid.innerHTML=elegidos.map(p=>{
+    const foto=(p.fs&&p.fs[0])||p.f||p.s+".webp";
+    return `<button class="sug-card" type="button" data-product-sug="${esc(p.s)}">
+      <img src="fotos/${esc(foto)}" alt="" loading="lazy" decoding="async">
+      <span class="sug-nombre">${esc(p.n)}</span>
+      <span class="sug-precio mono">${fmt(p.pv)}</span>
+    </button>`
+  }).join("");
+  seccion.hidden=false;
+}
 $("#sug-grid")?.addEventListener("click",e=>{
   const c=e.target.closest("[data-sug]"); if(c)abrir(c.dataset.sug);
+});
+$("#m-sug-grid")?.addEventListener("click",e=>{
+  const c=e.target.closest("[data-product-sug]");if(c)abrir(c.dataset.productSug);
 });
 const carroEl=$("#carro"), carroFondo=$("#carro-fondo");
 function abrirCarro(o){carroEl.hidden=!o;carroFondo.hidden=!o;document.body.style.overflow=o?"hidden":""}
@@ -193,8 +219,8 @@ function tarjeta(p,i){
     <div class="pieza-marco">
       <img src="fotos/${foto}" alt="${esc(p.n)}" loading="lazy" decoding="async" fetchpriority="low" width="1000" height="1000">
       ${mult?`<span class="pieza-mult m">${p.vd?"▶":"▦"} ${p.vd?(p.fs?p.fs.length+" fotos + vídeo":"vídeo"):(p.fs.length+" fotos")}</span>`:""}
-      <button class="pieza-add" data-add="${p.s}" aria-label="Añadir al carrito: ${esc(p.n)}" title="Añadir al carrito">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      <button class="pieza-add${agotado?" pieza-add--agotado":""}" ${agotado?`disabled aria-label="Producto agotado: ${esc(p.n)}" title="Producto agotado"`:`data-add="${esc(p.s)}" aria-label="Añadir al carrito: ${esc(p.n)}" title="Añadir al carrito"`}>
+        ${agotado?"×":`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`}
       </button>
     </div>
     <p class="pieza-estado"><span class="estado estado--${agotado?"agotado":"hay"}">${agotado?"Agotado":"Disponible"}</span></p>
@@ -288,14 +314,15 @@ function abrir(id){
   $("#m-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, me interesa ${p.n} (${p.c}) — precio publicado: ${fmt(p.pv)}.${destinoTxt} ¿Me confirman disponibilidad, características y precio final?`)}`;
   const llamada=$("#m-llamada");
   if(llamada) llamada.href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, quiero agendar una llamada gratuita de 10 minutos sobre ${p.n}. Precio publicado: ${fmt(p.pv)}.${destinoTxt} Quiero saber si es adecuado para mi necesidad.`)}`;
-  const b=$("#m-add"); b.textContent="Añadir al carrito"; b.disabled=false;
+  const b=$("#m-add");b.textContent=p.e==="agotado"?"Agotado":"Añadir al carrito";b.disabled=p.e==="agotado";
+  pintarSugerenciasProducto(id);
   const position=lista.findIndex(item=>item.s===id);
   const prev=$("#m-prev"), next=$("#m-next"), pos=$("#m-pos");
   prev.disabled=position<=0; next.disabled=position<0||position>=lista.length-1;
   prev.dataset.product=position>0?lista[position-1].s:"";
   next.dataset.product=position>=0&&position<lista.length-1?lista[position+1].s:"";
   pos.textContent=position>=0?`${position+1} / ${lista.length}`:"";
-  modal.showModal(); document.body.style.overflow="hidden";
+  if(!modal.open)modal.showModal();document.body.style.overflow="hidden";
 }
 $("#vitrina").addEventListener("click",e=>{
   const add=e.target.closest("[data-add]");
@@ -318,10 +345,10 @@ $("#m-galeria")?.addEventListener("click",e=>{
 });
 $("#m-add").addEventListener("click",()=>{
   if(!abierto)return;
-  addCarro(abierto);
+  const id=abierto,b=$("#m-add");if(!addCarro(id))return;
   irASugerencias=true;
-  const b=$("#m-add"); b.textContent="Añadido ✓"; b.disabled=true;
-  setTimeout(()=>{b.textContent="Añadir al carrito";b.disabled=false},1400);
+  b.textContent="Añadido ✓"; b.disabled=true;
+  setTimeout(()=>{if(abierto===id){const agotado=porId[id]?.e==="agotado";b.textContent=agotado?"Agotado":"Añadir al carrito";b.disabled=agotado}},1400);
 });
 $("#m-prev").addEventListener("click",e=>{if(e.currentTarget.dataset.product)abrir(e.currentTarget.dataset.product)});
 $("#m-next").addEventListener("click",e=>{if(e.currentTarget.dataset.product)abrir(e.currentTarget.dataset.product)});

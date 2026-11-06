@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=15">
 <meta property="og:title" content="Nexo — Catálogo de productos para Cuba">
 <meta property="og:description" content="Más de 340 productos con foto real y precio claro. Entrega a domicilio y atención directa por WhatsApp.">
 <meta property="og:type" content="website">
@@ -510,11 +510,15 @@
       <p class="m-nota">¿Dudas? Agende una <strong>llamada gratuita</strong> antes de comprar y se lo explicamos todo. Si está agotado, escriba igual: le avisamos apenas vuelva a entrar.</p>
     </div>
   </div>
+  <section class="modal-sugerencias" id="m-sugerencias" aria-labelledby="m-sugerencias-titulo" hidden>
+    <h3 id="m-sugerencias-titulo">También podría interesarte</h3>
+    <div class="sug-grid" id="m-sug-grid"></div>
+  </section>
 </dialog>
 
 <script src="catalogo.js?v=ar1" defer></script>
 <script src="esfera.js?v=6" defer></script>
 <script src="micro.js?v=7" defer></script>
-<script src="app.js?v=ar1" defer></script>
+<script src="app.js?v=sug1" defer></script>
 </body>
 </html>

@@ -498,6 +498,8 @@ h2{
 }
 .pieza-add:hover{background:var(--ac);color:#03121d;border-color:var(--ac)}
 .pieza-add.ok{background:var(--ac);color:#03121d;transform:scale(1.12)}
+.pieza-add:disabled,.pieza-add--agotado{cursor:not-allowed;opacity:.46;filter:grayscale(1)}
+.pieza-add--agotado{font-size:1.2rem}
 .pieza-estado{margin:.8rem 0 .3rem}
 .estado{
   display:inline-block;
@@ -1038,6 +1040,8 @@ footer{
 .sug-nombre { font-size: 13px; font-weight: 600; color: var(--tx); margin-top: 10px; line-height: 1.35;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
 .sug-precio { font-size: 12px; color: var(--ac); margin-top: 4px }
+.modal-sugerencias{padding:0 clamp(1.4rem,3vw,2.4rem) clamp(1.4rem,3vw,2.4rem);border-top:1px solid rgba(255,255,255,.08)}
+.modal-sugerencias h3{font-size:clamp(19px,2.4vw,25px);margin:1.4rem 0 1rem}
 
 /* ===== enlace sin compromiso (bento) ===== */
 .bento-pregunta { margin-top: 12px; font-size: 13px; color: var(--tx2); line-height: 1.5 }
@@ -1070,12 +1074,11 @@ footer{
 
 
 /* ---------- Mensajería: camión y paquetes animados ---------- */
-.envio-ruta{position:relative;width:min(100%,620px);height:46px;margin:.85rem 0 .55rem;border-bottom:1px solid var(--linea-f);overflow:hidden}
+.envio-ruta{position:relative;width:100%;height:46px;margin:.85rem 0 .55rem;border-bottom:1px solid var(--linea-f);overflow:hidden}
 .envio-ruta::after{content:"";position:absolute;left:0;right:0;bottom:-1px;border-bottom:1px dashed rgba(148,168,196,.22)}
-.envio-camion{position:absolute;z-index:2;left:0;bottom:1px;width:64px;height:36px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.38));animation:envio-recorrido 7.2s linear infinite}
+.envio-camion{position:absolute;z-index:2;left:0;bottom:1px;width:64px;height:36px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.38));will-change:transform}
 .envio-paquete{position:absolute;z-index:1;bottom:0;width:32px;height:32px;border:1px solid #e3b17e;background:linear-gradient(90deg,transparent 45%,rgba(91,53,25,.28) 45%,rgba(91,53,25,.28) 55%,transparent 55%),linear-gradient(0deg,transparent 45%,rgba(91,53,25,.25) 45%,rgba(91,53,25,.25) 55%,transparent 55%),#c98a52;border-radius:2px;opacity:0;transform:translateY(-18px) scale(.9);animation:envio-paquete-caida 1.6s ease-out forwards}
-@keyframes envio-recorrido{0%{transform:translateX(0)}100%{transform:translateX(calc(100% - 64px))}}
-@keyframes envio-paquete-caida{0%{opacity:0;transform:translateY(-18px) scale(.9)}18%,55%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(10px) scale(.84)}}
+@keyframes envio-paquete-caida{0%{opacity:0;transform:translateY(-18px) scale(.9)}45%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:1;transform:translateY(0) scale(1)}}
 
 @media(max-width:700px){.envio-ruta{width:100%}}
 @media(prefers-reduced-motion:reduce){.envio-camion,.envio-paquete{animation:none}.envio-camion{transform:translateX(0)}.envio-paquete{opacity:0}}
