@@ -851,6 +851,8 @@ footer{
   padding:1.1rem 1.3rem;margin-bottom:1.3rem;
 }
 .m-venta-t{text-transform:uppercase;color:var(--ac);margin-bottom:.5rem}
+.m-garantia{padding:1rem 1.2rem;margin:-.35rem 0 1.3rem;border:1px solid rgba(116,232,155,.28);border-left:3px solid #74e89b;border-radius:var(--r-md);background:rgba(116,232,155,.055)}
+.m-garantia .m-venta-t{color:#74e89b;margin-bottom:.35rem}.m-garantia strong{display:block;font-size:1rem;color:var(--txt)}.m-garantia p:last-child{margin-top:.3rem;color:var(--txt3);font-size:.82rem;line-height:1.5}
 .especificaciones{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
   gap:.7rem 1.4rem;margin-bottom:1.4rem;

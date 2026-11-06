@@ -40,6 +40,11 @@ try{envio=LS?JSON.parse(LS.getItem("nexo-envio")||"{}")||{}:{}}catch(e){}
 function guardarEnvio(){try{LS&&LS.setItem("nexo-envio",JSON.stringify(envio))}catch(e){}}
 function calcularEnvio(id){return ENVIO_ZONAS[id]||null}
 function textoEnvio(e){return !e?"A confirmar":e.c===null?"A confirmar":e.c===0?"Sin cargo":fmt(e.c)}
+function garantiaProducto(p){return (p.sp||[]).find(([k])=>/garant/i.test(k))?.[1]||"No indicada en esta ficha"}
+function resumenGarantiaCategoria(c){
+  const valores=[...new Set(CATALOGO.filter(p=>p.c===c).map(garantiaProducto).filter(v=>v&&v!=="No indicada en esta ficha"))];
+  return valores.length?valores.join(" · "):"No hay una política publicada para esta categoría";
+}
 function pintarEnvio(){
   const sel=$("#envio-zona"), resultado=$("#envio-resultado"), lugar=$("#envio-lugar"), precio=$("#envio-precio"), letra=$("#envio-letra");
   if(!sel||!resultado)return;
@@ -257,6 +262,9 @@ function abrir(id){
   $("#m-desc-l").textContent=p.dl||"";
   $("#m-venta").textContent=p.v||"";
   $("#m-specs").innerHTML=(p.sp||[]).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
+  const garantia=garantiaProducto(p), garantiaTitulo=$("#m-garantia-titulo"), garantiaTexto=$("#m-garantia-texto");
+  if(garantiaTitulo) garantiaTitulo.textContent=garantia;
+  if(garantiaTexto) garantiaTexto.textContent=`En ${p.c}: ${resumenGarantiaCategoria(p.c)}. Revise la garantía exacta de esta ficha y pregunte cualquier duda antes de pagar.`;
   const destino=calcularEnvio(envio.id);
   const destinoTxt=destino?` Entrega estimada a ${destino.n}: ${textoEnvio(destino)}.`:"";
   $("#m-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, me interesa: ${p.n} — ${fmt(p.pv)}.${destinoTxt} ¿Me confirman disponibilidad, garantía y precio final?`)}`;
