@@ -13,6 +13,7 @@ const ENVIO_ZONAS={
   "habana-vieja":{n:"La Habana Vieja",c:0,t:"Sin cargo estimado dentro del radio cercano."},
   "centro-habana":{n:"Centro Habana",c:0,t:"Sin cargo estimado dentro del radio cercano."},
   "plaza":{n:"Plaza de la Revolución",c:0,t:"Sin cargo estimado dentro del radio cercano."},
+  "vedado":{n:"Vedado",c:0,t:"Sin cargo estimado dentro del radio cercano."},
   "cerro":{n:"Cerro",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
   "diez-de-octubre":{n:"Diez de Octubre",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
   "playa":{n:"Playa",c:0,t:"Sin cargo estimado dentro del radio cercano."},
@@ -25,9 +26,13 @@ const ENVIO_ZONAS={
   "arroyo-naranjo":{n:"Arroyo Naranjo",c:null,t:"Confirme la dirección y el costo por WhatsApp."},
   "boyeros":{n:"Boyeros",c:940,t:"Estimado por zona; se confirma por WhatsApp."},
   "cotorro":{n:"Cotorro",c:915,t:"Estimado por zona; se confirma por WhatsApp."},
-  "bauta":{n:"Bauta",c:null,t:"Coordinamos el envío por WhatsApp."},
-  "artemisa":{n:"Artemisa",c:null,t:"Coordinamos el envío por WhatsApp."},
-  "san-jose":{n:"San José de las Lajas",c:null,t:"Coordinamos el envío por WhatsApp."},
+  "guanabo":{n:"Guanabo",c:1397,t:"Estimado por zona; se confirma por WhatsApp."},
+  "boca-ciega":{n:"Boca Ciega",c:1309,t:"Estimado por zona; se confirma por WhatsApp."},
+  "campo-florido":{n:"Campo Florido",c:1475,t:"Estimado por zona; se confirma por WhatsApp."},
+  "tarara":{n:"Tarará",c:1020,t:"Estimado por zona; se confirma por WhatsApp."},
+  "bauta":{n:"Bauta",c:3500,t:"Tarifa pública por zona; confirme dirección y coordinación por WhatsApp."},
+  "artemisa":{n:"Artemisa",c:7500,t:"Tarifa pública por zona; confirme dirección y coordinación por WhatsApp."},
+  "san-jose":{n:"San José de las Lajas",c:4000,t:"Tarifa pública por zona; confirme dirección y coordinación por WhatsApp."},
   "otra":{n:"Otro municipio",c:null,t:"Díganos dónde es y confirmamos el envío por WhatsApp."}
 };
 let envio={};
