@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=15">
+<link rel="stylesheet" href="nexo-growth.css?v=1">
 <meta property="og:title" content="Nexo — Catálogo de productos para Cuba">
 <meta property="og:description" content="Más de 340 productos con foto real y precio claro. Entrega a domicilio y atención directa por WhatsApp.">
 <meta property="og:type" content="website">
@@ -191,7 +192,29 @@
 
     <p class="lbl mono">[ 03 — Catálogo ]</p>
     <h2>El catálogo <em>se abre</em>.</h2>
-    <p class="sec-nota">Fotos reales, estado de disponibilidad y precio de cada producto. Añada al carrito y envíenos la lista completa por WhatsApp.</p>
+    <p class="sec-nota">Fotos reales, estado de disponibilidad y precio de cada producto. El catálogo no es una pared de productos: es una mesa de decisiones. Filtre, compare, abra la ficha y pregunte sin compromiso.</p>
+
+    <section id="nexo-advisor" class="nexo-advisor" aria-labelledby="nexo-advisor-title">
+      <div class="nexo-advisor-copy">
+        <p class="lbl mono">[ Asistente de elección ]</p>
+        <h3 id="nexo-advisor-title">Cuénteme qué necesita resolver.</h3>
+        <p>Escriba el problema como se lo contaría a una persona. Le mostraremos hasta siete opciones del catálogo y la categoría que más sentido tiene para empezar.</p>
+      </div>
+      <form id="nexo-advisor-form" class="nexo-advisor-form">
+        <label for="nexo-advisor-input" class="m">Por ejemplo: “quiero respaldo para los apagones”</label>
+        <div class="nexo-advisor-row">
+          <input id="nexo-advisor-input" type="search" autocomplete="off" placeholder="¿Qué problema quiere resolver?" aria-describedby="nexo-advisor-hint">
+          <button class="cta cta-llena" type="submit">Encontrar opciones <span aria-hidden="true">→</span></button>
+        </div>
+        <p id="nexo-advisor-hint" class="m">No reemplaza la orientación humana: sirve para comenzar mejor.</p>
+      </form>
+      <div id="nexo-advisor-result" class="nexo-advisor-result" hidden aria-live="polite">
+        <div class="nexo-advisor-result-head"><div><p class="m">Recomendación de partida</p><h4 id="nexo-advisor-category"></h4></div><button id="nexo-advisor-clear" type="button" class="m">Nueva consulta ×</button></div>
+        <p id="nexo-advisor-summary" class="nexo-advisor-summary"></p>
+        <div id="nexo-advisor-products" class="nexo-advisor-products"></div>
+        <a id="nexo-advisor-wa" class="cta cta-linea" target="_blank" rel="noopener">Quiero que me orienten por WhatsApp <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
 
     <div class="filtros">
       <div class="tabs-row">
@@ -287,6 +310,7 @@
   <div class="pad">
     <p class="lbl mono">[ 04 — Cómo funciona ]</p>
     <h2>Tres pasos.<br>Cero vueltas.</h2>
+    <p class="labia-nota">Esto es una compra, no un salto al vacío: primero miramos el problema, luego comparamos y solo después hablamos de confirmar.</p>
     <div class="como-track">
       <div class="como-fijo">
         <p class="como-num mono" id="como-num">01</p>
@@ -520,5 +544,6 @@
 <script src="esfera.js?v=6" defer></script>
 <script src="micro.js?v=7" defer></script>
 <script src="app.js?v=sug1" defer></script>
+<script src="nexo-growth.js?v=1" defer></script>
 </body>
 </html>
