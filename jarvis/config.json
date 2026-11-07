@@ -1,0 +1,78 @@
+{
+  "_comentario": "Jarvis — configuración. Los límites de seguridad son la última palabra: ningún mensaje puede saltárselos.",
+  "nombre": "Jarvis",
+  "puerto": 8765,
+  "seguridad": {
+    "modo": "confirmar",
+    "carpetas_permitidas": [
+      "%USERPROFILE%\\Documents",
+      "%USERPROFILE%\\Desktop",
+      "%USERPROFILE%\\Downloads"
+    ],
+    "comandos_bloqueados": [
+      "format",
+      "diskpart",
+      "shutdown /r /t 0",
+      "reg delete",
+      "takeown",
+      "icacls /reset",
+      "bcdedit",
+      "cipher /w",
+      "del /f /s /q c:\\",
+      "rd /s /q c:\\"
+    ],
+    "apps_permitidas": [
+      "notepad",
+      "calc",
+      "mspaint",
+      "explorer",
+      "code",
+      "chrome",
+      "firefox",
+      "msedge",
+      "spotify",
+      "discord",
+      "steam",
+      "wt",
+      "cmd",
+      "powershell",
+      "taskmgr",
+      "control",
+      "winword",
+      "excel",
+      "powerpnt",
+      "outlook",
+      "vlc",
+      "7zfm"
+    ],
+    "permitir_apagar_equipo": true,
+    "permitir_bloquear_equipo": true,
+    "segundos_maximos_por_comando": 120
+  },
+  "cerebro": {
+    "proveedor": "ollama",
+    "_proveedor": "ollama (local, gratis, ilimitado) | compatible | openai | anthropic | gemini | ninguno",
+    "modelo": "llama3.2",
+    "_modelo": "lo que tengas descargado en Ollama. Con otra máquina: qwen2.5:3b o llama3.2:3b",
+    "api_key": "",
+    "base_url": "",
+    "ollama_url": "http://localhost:11434",
+    "temperatura": 0.7,
+    "max_historial": 24,
+    "personalidad": "Hablas español, con naturalidad y sin relleno: directo, algo seco, útil. Sin emojis salvo que el usuario los use. Nada de disclaimers innecesarios. Si no sabes algo, lo dices."
+  },
+  "voz": {
+    "motor": "auto",
+    "_motor": "auto | sapi | ninguno. 'auto' usa SAPI de Windows (gratis, sin instalar nada)",
+    "velocidad": 1.0,
+    "volumen": 1.0,
+    "voz_preferida": "",
+    "leer_respuestas": false
+  },
+  "escucha": {
+    "activar": false,
+    "_activar": "true = escucha el micrófono con Vosk (100% offline, gratis). Requiere: pip install vosk y un modelo en jarvis/modelos",
+    "modelo": "vosk-model-small-es-0.42",
+    "palabra_clave": "jarvis"
+  }
+}
