@@ -87,7 +87,7 @@
     if(followup){const questions=[...(data.missing_info||[]),data.next_question].filter(Boolean);followup.innerHTML=questions.length?`<strong>Para afinar:</strong> ${questions.map(esc).join(' · ')}`:'';followup.hidden=!questions.length;}
     products.innerHTML=(data.recommendations||[]).map(p=>`<button class="nexo-advisor-product" type="button" data-advisor-product="${esc(p.slug)}"><img src="fotos/${esc(p.image||p.slug+'.webp')}" alt="${esc(p.name)}" loading="lazy" decoding="async"><strong>${esc(p.name)}</strong><span>${esc(p.role||'Opción recomendada')} · ${fmt((p.price_usd||0)*100)}</span><small>${esc(p.why||'')}</small></button>`).join('');
     if(sources){sources.innerHTML=(data.web_sources||[]).map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title||'Fuente consultada')} ↗</a>`).join('');sources.hidden=!(data.web_sources||[]).length;}
-    waLink.href=`https://wa.me/${wa}?text=${encodeURIComponent('Hola, mi situación es: '+text+'. Vi la orientación de Nexo y quiero que me ayuden a elegir la combinación correcta.')}`;
+    waLink.href=data.whatsapp_url||`https://wa.me/${wa}?text=${encodeURIComponent('Hola, mi situación es: '+text+'. Vi la orientación de Nexo y quiero que me ayuden a elegir la combinación correcta.')}`;
     result.hidden=false;
   }
   async function remotePaint(text){
@@ -95,7 +95,9 @@
     result.hidden=false; category.textContent='Entendiendo su situación…'; if(dialog)dialog.textContent='Estoy separando lo urgente de los complementos para no recomendarle algo que no resuelve su problema.';
     const messages=[...chatHistory,{role:'user',content:text}];
     const response=await fetch(AI_ENDPOINT,{method:'POST',headers:{'content-type':'application/json'},credentials:'omit',body:JSON.stringify({messages})});
-    const data=await response.json(); if(!response.ok||data.error)throw new Error(data.error||'No se pudo consultar el asesor');
+    const data=await response.json();
+    if(data.limit_reached){showData({mode:'clarify',reply:data.error,diagnosis:'Límite semanal alcanzado',recommendations:[],web_sources:[],missing_info:[],next_question:'',whatsapp_url:data.whatsapp_url},text);return data;}
+    if(!response.ok||data.error)throw new Error(data.error||'No se pudo consultar el asesor');
     chatHistory.push({role:'user',content:text},{role:'assistant',content:[data.reply,data.diagnosis,data.next_question].filter(Boolean).join(' ')});
     showData(data,text); return data;
   }

@@ -7,6 +7,7 @@
   const key='nexo-push-enabled';
   const base64ToBytes=value=>{const pad='='.repeat((4-value.length%4)%4),raw=atob((value+pad).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...raw],c=>c.charCodeAt(0));};
   const cart=()=>{try{return JSON.parse(ls?.getItem('nexo-carro')||'{}')||{}}catch(_){return {}}};
+  async function catalogInfo(){const list=Array.isArray(window.CATALOGO)?window.CATALOGO:[];const raw=list.map(p=>p.s).join('|');const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));const fingerprint=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');const product=list.find(p=>p.e!=='agotado');return {fingerprint,productName:product?.n||''};}
   const prompt=document.createElement('aside');
   prompt.id='nexo-push-prompt';
   prompt.hidden=true;
@@ -26,6 +27,8 @@
     let sub=await reg.pushManager.getSubscription();
     if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64ToBytes(publicKey)});
     await fetch(`${API}/subscribe`,{method:'POST',headers:{'content-type':'application/json'},credentials:'omit',body:JSON.stringify({subscription:sub.toJSON()}),keepalive:true});
+    const catalog=await catalogInfo();
+    await fetch(`${API}/catalog-seen`,{method:'POST',headers:{'content-type':'application/json'},credentials:'omit',body:JSON.stringify({subscription:sub.toJSON(),...catalog}),keepalive:true});
     try{ls?.setItem(key,'enabled')}catch(_){}
     window.__nexoPushSubscription=sub;
   }
