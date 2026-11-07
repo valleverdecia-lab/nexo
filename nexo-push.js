@@ -7,7 +7,7 @@
   const key='nexo-push-enabled';
   const base64ToBytes=value=>{const pad='='.repeat((4-value.length%4)%4),raw=atob((value+pad).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...raw],c=>c.charCodeAt(0));};
   const cart=()=>{try{return JSON.parse(ls?.getItem('nexo-carro')||'{}')||{}}catch(_){return {}}};
-  async function catalogInfo(){const list=Array.isArray(window.CATALOGO)?window.CATALOGO:[];const raw=list.map(p=>p.s).join('|');const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));const fingerprint=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');const product=list.find(p=>p.e!=='agotado');return {fingerprint,productName:product?.n||''};}
+  async function catalogInfo(){const list=typeof CATALOGO!=='undefined'&&Array.isArray(CATALOGO)?CATALOGO:[];const raw=list.map(p=>p.s).join('|');const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));const fingerprint=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');const product=list.find(p=>p.e!=='agotado');return {fingerprint,productName:product?.n||''};}
   const prompt=document.createElement('aside');
   prompt.id='nexo-push-prompt';
   prompt.hidden=true;
@@ -21,7 +21,7 @@
     hide();
     const permission=Notification.permission==='granted'?'granted':await Notification.requestPermission();
     if(permission!=='granted'){try{ls?.setItem(key,'denied')}catch(_){}return}
-    const reg=await navigator.serviceWorker.register('./sw.js?v=1',{scope:'./'});
+    const reg=await navigator.serviceWorker.register('./sw.js?v=2',{scope:'./'});
     const publicKey=(await (await fetch(`${API}/public-key`,{credentials:'omit'})).json()).publicKey;
     if(!publicKey)throw new Error('No public key');
     let sub=await reg.pushManager.getSubscription();
