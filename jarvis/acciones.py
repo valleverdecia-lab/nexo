@@ -562,8 +562,13 @@ def interpretar_local(texto: str) -> dict[str, Any]:
             ruta = f"{m.group(2)}/{ruta}"
         return {"accion": "leer_archivo", "args": {"ruta": ruta}}
 
+    # Shell explícito: "ejecuta ipconfig" es un comando, no una app
+    m = re.match(r"(?:ejecuta|corre|lanza el comando|comando|terminal:)\s*(?::)?\s*(.+)", t)
+    if m and m.group(1).strip():
+        return {"accion": "ejecutar_comando", "args": {"comando": m.group(1).strip()}}
+
     # Apps
-    m = re.search(r"(?:abre|abrir|lanza|ejecuta|inicia)\s+(?:la\s+|el\s+|una\s+)?(?:app\s+|aplicacion\s+|programa\s+|carpeta\s+)?(.+)", t)
+    m = re.search(r"(?:abre|abrir|lanza|inicia)\s+(?:la\s+|el\s+|una\s+)?(?:app\s+|aplicacion\s+|programa\s+|carpeta\s+)?(.+)", t)
     if m:
         objetivo = m.group(1).strip().rstrip(".!")
         if objetivo in APP_SINONIMOS:

@@ -90,6 +90,35 @@ if (-not $SinInicioAutomatico) {
     }
 }
 
+# ---------------------------------------------------------------- Ollama
+Escribir "`nBuscando Ollama (el motor que hace esto ilimitado)…"
+$ollama = (Get-Command ollama -ErrorAction SilentlyContinue)
+if ($ollama) {
+    Escribir "Ollama encontrado en $($ollama.Source)" "Green"
+    $modelos = & ollama list 2>$null
+    if (($modelos | Measure-Object).Count -le 1) {
+        Escribir "No hay modelos descargados todavía." "Yellow"
+        $resp = Read-Host "¿Descargar llama3.2 ahora (~2 GB, una sola vez)? (s/N)"
+        if ($resp -match "^[sS]") {
+            Escribir "Descargando… (puede tardar varios minutos según tu conexión)"
+            & ollama pull llama3.2
+        }
+    } else {
+        Escribir ($modelos -join "`n") "Green"
+    }
+    # Ollama solo escucha en localhost; el servidor de Jarvis también, así que vale.
+} else {
+    Escribir "Ollama no está instalado. Es lo que hace que Jarvis sea un ChatGPT ilimitado y gratis." "Yellow"
+    Escribir "  Descárgalo de https://ollama.com/download (Windows) y vuelve a ejecutar este instalador," "Yellow"
+    Escribir "  o instálalo ahora con:" "Yellow"
+    Escribir "    winget install Ollama.Ollama" "Cyan"
+    $resp = Read-Host "¿Intentar instalarlo con winget ahora? (s/N)"
+    if ($resp -match "^[sS]") {
+        & winget install --id Ollama.Ollama --accept-source-agreements --accept-package-agreements
+        Escribir "Si terminó bien, abre Ollama y ejecuta: ollama pull llama3.2" "Green"
+    }
+}
+
 # ---------------------------------------------------------------- voz de Windows
 Escribir "`nComprobando voces instaladas…"
 $voces = & powershell -NoProfile -Command @"
