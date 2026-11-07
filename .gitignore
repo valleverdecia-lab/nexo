@@ -1,3 +1,7 @@
 node_modules/
 michi/
 michi/.michi-data/
+jarvis/jarvis.log
+jarvis/notas.txt
+jarvis/modelos/
+__pycache__/
